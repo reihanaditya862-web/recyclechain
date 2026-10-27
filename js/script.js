@@ -94,6 +94,43 @@ function roundKg(value) {
   return Math.round(value * 10) / 10;
 }
 
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+// Angka menghitung dari nilai lama ke nilai baru, digambar per frame layar
+// (requestAnimationFrame mengikuti refresh rate: 60, 90, atau 120 Hz)
+function animateNumber(el, to) {
+  const from = el.dataset.value === undefined ? to : Number(el.dataset.value);
+  el.dataset.value = to;
+  cancelAnimationFrame(el.animationFrame);
+
+  if (from === to || reducedMotion.matches) {
+    el.textContent = formatPoints(to);
+    return;
+  }
+
+  const duration = 700;
+  let start = null;
+
+  const step = (now) => {
+    // Waktu mulai diambil dari frame pertama, dan t dijaga di 0..1,
+    // karena timestamp frame bisa sedikit lebih awal dari performance.now()
+    if (start === null) start = now;
+    const t = Math.min(1, Math.max(0, (now - start) / duration));
+    const eased = 1 - Math.pow(1 - t, 3);
+    el.textContent = formatPoints(Math.round(from + (to - from) * eased));
+    if (t < 1) el.animationFrame = requestAnimationFrame(step);
+  };
+
+  el.animationFrame = requestAnimationFrame(step);
+
+  // Pengaman: kalau frame ditahan browser (tab di latar belakang), angka akhir tetap benar
+  clearTimeout(el.finishTimer);
+  el.finishTimer = setTimeout(() => {
+    cancelAnimationFrame(el.animationFrame);
+    el.textContent = formatPoints(to);
+  }, duration + 150);
+}
+
 function icon(id) {
   return `<svg aria-hidden="true"><use href="#${id}"/></svg>`;
 }
@@ -301,7 +338,7 @@ function renderBeranda(totals) {
     ? `Kurang ${formatPoints(next.short)} poin lagi untuk ${next.phrase}.`
     : "Saldomu cukup untuk semua reward Basic.";
 
-  document.getElementById("balanceValue").textContent = formatPoints(totals.balance);
+  animateNumber(document.getElementById("balanceValue"), totals.balance);
 
   const change = document.getElementById("balanceChange");
   if (totals.weekChange === 0) {
@@ -330,15 +367,25 @@ function renderBeranda(totals) {
     };
   });
 
+  // Isi saldo mulai dari posisi sebelumnya, lalu meluncur ke posisi baru (lihat .ladder-fill)
   const ladder = document.getElementById("ladder");
+  const previousFill = ladder.dataset.fill === undefined ? fill : Number(ladder.dataset.fill);
+  ladder.dataset.fill = fill;
   ladder.innerHTML =
     `<div class="ladder-track" role="img" aria-label="Saldo ${formatPoints(totals.balance)} dari ${formatPoints(top)} poin">` +
-      `<span class="ladder-fill" style="width:${fill}%"></span>` +
+      `<span class="ladder-fill" style="transform:scaleX(${previousFill / 100})"></span>` +
       (pendingEnd > fill ? `<span class="ladder-pending" style="left:${fill}%;width:${pendingEnd - fill}%"></span>` : "") +
       ticks.map((item) => item.tick).join("") +
     `</div>` +
     `<span class="ladder-value start num" style="left:0">0</span>` +
     ticks.map((item) => item.label).join("");
+
+  if (previousFill !== fill) {
+    const bar = ladder.querySelector(".ladder-fill");
+    // Baca ukurannya dulu agar browser mencatat posisi lama, lalu transisi ke posisi baru
+    void bar.offsetWidth;
+    bar.style.transform = `scaleX(${fill / 100})`;
+  }
 
   document.getElementById("ladderList").innerHTML = steps.map((step) => `
     <li>
@@ -549,7 +596,7 @@ function renderTukar(totals) {
     <dd>${totals.pending.length ? `+${formatPoints(totals.pendingPoints)} poin` : "—"}</dd>
     <dt>Saldo setelah ditimbang</dt><dd>${formatPoints(totals.balance + totals.pendingPoints)} poin</dd>`;
   document.getElementById("rewardMeta").textContent = `${DATA.rewards.length} reward`;
-  document.getElementById("tukarBalance").textContent = formatPoints(totals.balance);
+  animateNumber(document.getElementById("tukarBalance"), totals.balance);
   document.getElementById("tukarNext").textContent = next
     ? `Kurang ${formatPoints(next.short)} poin untuk ${next.phrase}.`
     : "Cukup untuk semua reward Basic.";
@@ -1590,8 +1637,21 @@ document.querySelectorAll(".theme-select").forEach((select) => {
     .join("");
   select.value = currentTheme();
 
-  select.addEventListener("change", () => applyTheme(select.value));
+  select.addEventListener("change", () => switchTheme(select.value));
 });
+
+// Ganti tema dengan memudar halus, kalau browser mendukung View Transitions
+function switchTheme(theme) {
+  if (document.startViewTransition && !reducedMotion.matches && !document.hidden) {
+    document.startViewTransition(() => applyTheme(theme));
+    // Pengaman: kalau browser menunda transisinya, tema tetap terpasang
+    setTimeout(() => {
+      if (currentTheme() !== theme) applyTheme(theme);
+    }, 400);
+  } else {
+    applyTheme(theme);
+  }
+}
 
 // =====================================
 // INISIALISASI

@@ -343,7 +343,14 @@ svg use { pointer-events: none; }
   bottom: 0;
 }
 
-.ladder-fill { left: 0; background: var(--accent); }
+/* Isi saldo memakai transform (bukan width) agar perubahannya dianimasikan oleh GPU */
+.ladder-fill {
+  left: 0;
+  width: 100%;
+  background: var(--accent);
+  transform-origin: left center;
+  transition: transform 700ms var(--ease-out);
+}
 .ladder-pending { background: var(--accent-mid); }
 
 .ladder-tick {
@@ -1175,14 +1182,44 @@ select.input {
   }
 }
 
+/* will-change hanya selama animasi berjalan, agar GPU tidak menahan lapisan terus-menerus */
 .entering-item {
   animation: screen-in 380ms var(--ease-out) both;
   animation-delay: calc(var(--i, 0) * 60ms);
+  will-change: transform, opacity;
+}
+
+/* Dialog muncul dengan memudar dan sedikit naik; latarnya ikut memudar */
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+}
+
+.confirm-dialog[open] { animation: dialog-in 240ms var(--ease-out); }
+.confirm-dialog[open]::backdrop { animation: fade-in 240ms ease; }
+
+/* Ganti tema: tampilan lama memudar ke tampilan baru (View Transitions) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 320ms;
+  animation-timing-function: ease;
 }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     transition-duration: 0.01ms !important;
+    animation: none !important;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
     animation: none !important;
   }
 }
@@ -1297,7 +1334,7 @@ select.input {
   --accent-soft: rgba(214, 242, 224, 0.72);
   --accent-soft-hover: rgba(198, 236, 212, 0.9);
 
-  --glass-blur: blur(22px) saturate(170%);
+  --glass-blur: blur(16px) saturate(170%);  /* radius blur makin besar makin berat; 16px tetap terlihat bening */
   --glass-shine: inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 0 rgba(255, 255, 255, 0.3);
   --glass-shadow: 0 10px 30px rgba(31, 70, 50, 0.12);
   --blob-1: rgba(76, 195, 138, 0.55);
@@ -1321,7 +1358,7 @@ select.input {
   --accent-soft: rgba(76, 195, 138, 0.18);
   --accent-soft-hover: rgba(76, 195, 138, 0.28);
 
-  --glass-blur: blur(24px) saturate(160%);
+  --glass-blur: blur(16px) saturate(160%);
   --glass-shine: inset 0 1px 0 rgba(255, 255, 255, 0.18);
   --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
   --blob-1: rgba(46, 160, 105, 0.5);
@@ -1330,15 +1367,22 @@ select.input {
   --blob-4: rgba(210, 85, 70, 0.28);
 }
 
-/* Latar berwarna yang terlihat lewat panel bening; tetap di tempat saat menggulir */
-:root[data-rc-theme^="glass"] body {
+/* Latar berwarna yang terlihat lewat panel bening; tetap di tempat saat menggulir.
+   Digambar sekali di lapisan tetap sendiri (bukan background-attachment: fixed,
+   yang memaksa browser menggambar ulang seluruh latar di setiap frame gulir). */
+:root[data-rc-theme^="glass"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
   background:
     radial-gradient(42vmax 42vmax at 8% 12%, var(--blob-1), transparent 70%),
     radial-gradient(38vmax 38vmax at 92% 6%, var(--blob-2), transparent 70%),
     radial-gradient(44vmax 44vmax at 80% 94%, var(--blob-3), transparent 70%),
     radial-gradient(32vmax 32vmax at 10% 90%, var(--blob-4), transparent 70%),
     var(--ground);
-  background-attachment: fixed;
+  pointer-events: none;
+  transform: translateZ(0);
 }
 
 :root[data-rc-theme^="glass"] :is(.card, .tile, .segmented, .confirm-dialog, .topbar) {
