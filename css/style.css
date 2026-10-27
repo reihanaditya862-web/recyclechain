@@ -1629,7 +1629,7 @@ select.input {
   content: "";
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: -2;  /* di bawah gambar latar (.doodles, z-index -1) */
   background:
     radial-gradient(42vmax 42vmax at 8% 12%, var(--blob-1), transparent 70%),
     radial-gradient(38vmax 38vmax at 92% 6%, var(--blob-2), transparent 70%),
@@ -1688,3 +1688,52 @@ select.input {
 .theme-picker .input { height: 36px; font-size: var(--fs-small); }
 .sidebar .member { margin-top: 8px; }
 .auth-intro .theme-picker { max-width: 240px; margin-top: 16px; padding: 0; }
+
+
+/* =========================================
+   GAMBAR LATAR: tong sampah, botol, kardus, kaleng, HP, baterai, kertas, lampu, daun, daur ulang
+   Satu pola garis yang diulang di lapisan tetap; warnanya dari --doodle per tema,
+   jadi digambar sekali dan tidak membebani saat menggulir.
+========================================= */
+
+:root {
+  --doodle-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 520 520' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E %3Cg transform='translate(36 34) rotate(-10 12 12) scale(2.3)'%3E%3Cpath d='M4 7h16'/%3E%3Cpath d='M9 7V4.5h6V7'/%3E%3Cpath d='M6 7l1 13.5h10L18 7'/%3E%3Cpath d='M10 11v6M14 11v6'/%3E%3C/g%3E %3Cg transform='translate(208 22) rotate(14 12 12) scale(2.1)'%3E%3Cpath d='M5 19c7 0 14-5 14-15C9 4 5 10 5 19z'/%3E%3Cpath d='M5 19c3-4 6-7 10-9'/%3E%3C/g%3E %3Cg transform='translate(372 40) rotate(16 12 12) scale(2.4)'%3E%3Cpath d='M10 2.5h4v2.5l1.5 2.5v13a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-13L10 5z'/%3E%3Cpath d='M8.5 12h7'/%3E%3C/g%3E %3Cg transform='translate(120 170) rotate(8 12 12) scale(2.5)'%3E%3Cpath d='M3 8l9-4 9 4v9l-9 4-9-4z'/%3E%3Cpath d='M3 8l9 4 9-4'/%3E%3Cpath d='M12 12v9'/%3E%3Cpath d='M7.5 6l9 4'/%3E%3C/g%3E %3Cg transform='translate(300 168) rotate(-12 12 12) scale(2.3)'%3E%3Cellipse cx='12' cy='5.5' rx='6' ry='2'/%3E%3Cpath d='M6 5.5v13c0 1.1 2.7 2 6 2s6-.9 6-2v-13'/%3E%3Cpath d='M6 12c0 1.1 2.7 2 6 2s6-.9 6-2'/%3E%3C/g%3E %3Cg transform='translate(430 210) rotate(10 12 12) scale(1.8)'%3E%3Cpath d='M9 18h6M10 21h4'/%3E%3Cpath d='M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z'/%3E%3C/g%3E %3Cg transform='translate(30 300) rotate(12 12 12) scale(2.3)'%3E%3Crect x='6' y='2' width='12' height='20' rx='2.5'/%3E%3Cpath d='M11 18h2'/%3E%3C/g%3E %3Cg transform='translate(196 330) rotate(-18 12 12) scale(2.4)'%3E%3Crect x='2' y='8' width='17' height='9' rx='2'/%3E%3Cpath d='M21 11v3'/%3E%3Cpath d='M6 11v3M9.5 11v3'/%3E%3C/g%3E %3Cg transform='translate(372 330) rotate(9 12 12) scale(2.3)'%3E%3Cpath d='M6 3h9l4 4v14H6z'/%3E%3Cpath d='M15 3v4h4'/%3E%3Cpath d='M9 12h7M9 16h7'/%3E%3C/g%3E %3Cg transform='translate(96 440) scale(2.1)'%3E%3Cpath d='M7 19H4.8a1.8 1.8 0 0 1-1.6-.9 1.8 1.8 0 0 1 0-1.8L7.2 9.5'/%3E%3Cpath d='M11 19h8.2a1.8 1.8 0 0 0 1.6-.9 1.8 1.8 0 0 0 0-1.8l-1.2-2.1'/%3E%3Cpath d='M14 16l-3 3 3 3'/%3E%3Cpath d='M8.3 13.6 7.2 9.5 3.1 10.6'/%3E%3Cpath d='M9.3 5.8l1.1-1.9A1.8 1.8 0 0 1 12 3a1.8 1.8 0 0 1 1.5.9l3.9 6.8'/%3E%3Cpath d='M13.4 9.6l4.1 1.1 1.1-4.1'/%3E%3C/g%3E %3Cg transform='translate(290 452) rotate(-8 12 12) scale(1.7)'%3E%3Cpath d='M8 2v4M16 2v4'/%3E%3Crect x='5' y='6' width='14' height='8' rx='2'/%3E%3Cpath d='M12 14v4a3 3 0 0 1-3 3H8'/%3E%3C/g%3E %3Cg transform='translate(452 452) rotate(20 12 12) scale(1.6)'%3E%3Cpath d='M12 2v4'/%3E%3Cpath d='M8 6h8l-1 15H9z'/%3E%3Cpath d='M9.5 10h5'/%3E%3C/g%3E %3C/svg%3E");
+  --doodle: rgba(31, 122, 74, 0.08);
+  --doodle-size: 520px;
+}
+
+:root[data-rc-theme="dark"] { --doodle: rgba(166, 232, 197, 0.06); }
+:root[data-rc-theme="glass-light"] { --doodle: rgba(255, 255, 255, 0.5); }
+:root[data-rc-theme="glass-dark"] { --doodle: rgba(255, 255, 255, 0.07); }
+
+.doodles {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--doodle);
+  -webkit-mask-image: var(--doodle-tile);
+  mask-image: var(--doodle-tile);
+  -webkit-mask-size: var(--doodle-size) var(--doodle-size);
+  mask-size: var(--doodle-size) var(--doodle-size);
+  -webkit-mask-repeat: repeat;
+  mask-repeat: repeat;
+  pointer-events: none;
+  transform: translateZ(0);
+}
+
+@media (max-width: 640px) {
+  :root { --doodle-size: 400px; }
+}
+
+/* Menu sidebar tetap bersih: latar polos di tema biasa, panel kaca buram di tema liquid glass
+   (gambar latar di belakangnya ikut kabur). Di HP, sidebar adalah lembar penuh yang sudah punya latar. */
+@media (min-width: 1101px) {
+  .sidebar { background: var(--ground); }
+
+  :root[data-rc-theme^="glass"] .sidebar {
+    border-right: 1px solid var(--border);
+    background: var(--raised);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+  }
+}
