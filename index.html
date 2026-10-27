@@ -28,9 +28,55 @@
     <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
     <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5 10 17.5 19 7"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 4H5.5A1.5 1.5 0 0 0 4 5.5v13A1.5 1.5 0 0 0 5.5 20H9"/><path d="M16 16l4-4-4-4"/><path d="M20 12H10"/></symbol>
   </svg>
 
-  <div class="app">
+  <!-- DAFTAR / MASUK (simulasi, tanpa server) -->
+  <div class="auth" id="auth" hidden>
+    <div class="auth-intro">
+      <span class="brand">
+        <svg class="brand-mark"><use href="#mark"/></svg>
+        <span>RecycleChain</span>
+      </span>
+      <h1 class="auth-title">Sampahmu jadi saldo, bukan cuma jadi bau.</h1>
+      <p class="auth-lead">Setor sampah terpilah dari rumah, kumpulkan poin, lalu tukar dengan pulsa,
+        voucher belanja, token listrik, atau donasi lingkungan.</p>
+      <p class="auth-rates-label">Tarif poin per kg</p>
+      <ul class="auth-rates" id="authRates"></ul>
+    </div>
+
+    <div class="card auth-card">
+      <div class="segmented auth-tabs" role="group" aria-label="Pilih daftar atau masuk" id="authTabs">
+        <button type="button" data-mode="daftar" aria-pressed="true">Daftar</button>
+        <button type="button" data-mode="masuk" aria-pressed="false">Masuk</button>
+      </div>
+
+      <form class="form" id="authForm" novalidate>
+        <div class="field" id="nameField">
+          <label for="authName">Nama lengkap</label>
+          <input class="input" type="text" id="authName" autocomplete="name">
+        </div>
+        <div class="field">
+          <label for="authEmail">Email</label>
+          <input class="input" type="email" id="authEmail" autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="authPassword">Kata sandi</label>
+          <input class="input" type="password" id="authPassword" autocomplete="new-password"
+            aria-describedby="passwordHint">
+          <span class="hint" id="passwordHint">Minimal 6 karakter. Jangan pakai kata sandi asli.</span>
+        </div>
+        <p class="auth-error" id="authError" role="alert" hidden></p>
+        <button type="submit" class="btn primary wide-btn" id="authSubmit">Buat akun</button>
+      </form>
+
+      <button type="button" class="btn wide-btn" id="demoLogin">Coba sebagai Eco Hero</button>
+      <p class="fine">Ini simulasi untuk prototype. Kata sandi tidak disimpan dan tidak dikirim ke mana pun.
+        Nama dan email hanya disimpan di browser ini.</p>
+    </div>
+  </div>
+
+  <div class="app" id="app" hidden>
     <aside class="sidebar" id="sidebar" aria-label="Navigasi utama">
       <div class="sidebar-head">
         <a class="brand" href="#beranda" data-view="beranda">
@@ -57,6 +103,7 @@
           <small id="memberPlan">Paket Basic</small>
         </span>
       </a>
+      <button type="button" class="nav-item logout" id="logoutBtn"><svg><use href="#i-logout"/></svg>Keluar</button>
     </aside>
 
     <div class="main">

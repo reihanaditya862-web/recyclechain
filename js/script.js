@@ -678,8 +678,9 @@ function renderPaket() {
   const sub = state.subscription;
   const period = state.period;
 
-  document.getElementById("memberName").textContent = DATA.member.name;
-  document.getElementById("memberInitials").textContent = DATA.member.initials;
+  const account = state.account || DATA.member;
+  document.getElementById("memberName").textContent = account.name;
+  document.getElementById("memberInitials").textContent = account.initials;
   document.getElementById("memberPlan").textContent = `Paket ${current.name}`;
 
   screenSubs.paket = current.id === "basic"
@@ -1134,9 +1135,169 @@ window.addEventListener("hashchange", function() {
 });
 
 // =====================================
+// FITUR 6: AKUN (SIMULASI)
+// Tidak ada server: kata sandi tidak pernah disimpan atau dikirim.
+// Hanya nama dan email yang diingat, di browser ini saja.
+// =====================================
+
+const ACCOUNT_KEY = "recyclechain-account";
+const authScreen = document.getElementById("auth");
+const appScreen = document.getElementById("app");
+const authForm = document.getElementById("authForm");
+const authError = document.getElementById("authError");
+let authMode = "daftar";
+
+function loadAccount() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(ACCOUNT_KEY));
+    return saved && saved.name && saved.email ? saved : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveAccount(account) {
+  try {
+    localStorage.setItem(ACCOUNT_KEY, JSON.stringify(account));
+  } catch {
+    // Browser menolak penyimpanan: akun tetap aktif sampai halaman ditutup
+  }
+}
+
+function forgetAccount() {
+  try {
+    localStorage.removeItem(ACCOUNT_KEY);
+  } catch {
+    // Tidak ada yang perlu dihapus
+  }
+}
+
+function initialsOf(name) {
+  const words = name.trim().split(/\s+/);
+  return (words[0][0] + (words[1] ? words[1][0] : "")).toUpperCase();
+}
+
+// "budi.santoso@mail.com" menjadi "Budi Santoso"
+function nameFromEmail(email) {
+  return email.split("@")[0]
+    .split(/[._-]+/)
+    .filter(Boolean)
+    .map((word) => word[0].toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function setAuthMode(mode) {
+  authMode = mode;
+  const signingUp = mode === "daftar";
+
+  document.querySelectorAll("#authTabs button").forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.mode === mode));
+  });
+
+  document.getElementById("nameField").hidden = !signingUp;
+  document.getElementById("authSubmit").textContent = signingUp ? "Buat akun" : "Masuk";
+  document.getElementById("authPassword").autocomplete = signingUp ? "new-password" : "current-password";
+  authError.hidden = true;
+}
+
+function showAuth() {
+  appScreen.hidden = true;
+  authScreen.hidden = false;
+  authForm.reset();
+  setAuthMode("daftar");
+}
+
+function enterApp(account, message) {
+  state.account = account;
+  saveAccount(account);
+
+  authScreen.hidden = true;
+  appScreen.hidden = false;
+  renderAll();
+  showView(location.hash.slice(1), false);
+
+  if (message) showToast(message);
+}
+
+document.getElementById("authRates").innerHTML = Object.entries(DATA.materials)
+  .map(([id, item]) => `<li class="tag t-${id}">${escapeHtml(item.name)} ${formatPoints(item.rate)} poin</li>`)
+  .join("");
+
+document.getElementById("authTabs").addEventListener("click", function(event) {
+  const button = event.target.closest("[data-mode]");
+  if (button) setAuthMode(button.dataset.mode);
+});
+
+authForm.addEventListener("submit", function(event) {
+  event.preventDefault();
+
+  const name = document.getElementById("authName").value.trim();
+  const email = document.getElementById("authEmail").value.trim().toLowerCase();
+  const password = document.getElementById("authPassword").value;
+  let problem = "";
+
+  if (authMode === "daftar" && name.length < 2) {
+    problem = "Isi nama lengkap, minimal 2 huruf.";
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    problem = "Isi email dengan format yang benar, misalnya nama@email.com.";
+  } else if (password.length < 6) {
+    problem = "Kata sandi minimal 6 karakter.";
+  }
+
+  if (problem) {
+    authError.textContent = problem;
+    authError.hidden = false;
+    return;
+  }
+
+  if (authMode === "daftar") {
+    enterApp(
+      { name, email, initials: initialsOf(name) },
+      `Akun dibuat. Selamat datang, ${name.split(" ")[0]}! Akun baru memakai data contoh.`
+    );
+    return;
+  }
+
+  // Masuk: pakai nama yang pernah didaftarkan dengan email ini, kalau ada
+  const known = loadAccount();
+  const accountName = known && known.email === email ? known.name : nameFromEmail(email);
+  enterApp(
+    { name: accountName, email, initials: initialsOf(accountName) },
+    `Berhasil masuk. Halo, ${accountName.split(" ")[0]}!`
+  );
+});
+
+document.getElementById("demoLogin").addEventListener("click", function() {
+  enterApp({ ...DATA.member, email: "eco.hero@contoh.id" }, "Masuk sebagai Eco Hero dengan data contoh.");
+});
+
+document.getElementById("logoutBtn").addEventListener("click", async function() {
+  const confirmed = await askConfirm({
+    title: "Keluar dari akun",
+    rows: [["Akun", `${state.account.name} (${state.account.email})`]],
+    note: "Kamu bisa masuk lagi kapan saja dengan email yang sama.",
+    okLabel: "Keluar"
+  });
+
+  if (!confirmed) return;
+
+  closeSidebar();
+  forgetAccount();
+  state.account = null;
+  showAuth();
+  showToast("Kamu sudah keluar.");
+});
+
+// =====================================
 // INISIALISASI
 // =====================================
 
 buildDepositForm();
-renderAll();
-showView(location.hash.slice(1), false);
+state.account = loadAccount();
+
+if (state.account) {
+  enterApp(state.account);
+} else {
+  renderAll();
+  showAuth();
+}
