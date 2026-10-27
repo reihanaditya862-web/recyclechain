@@ -1683,34 +1683,205 @@ function loadImage(url) {
   });
 }
 
-// Potong bagian tengah jadi persegi, perkecil, simpan sebagai JPEG
-async function photoFromFile(file) {
+// Buka foto dari file; pesan error ditulis untuk pengguna
+async function imageFromFile(file, url) {
   if (!file.type.startsWith("image/")) {
     throw new Error("File itu bukan gambar. Pilih foto JPG, PNG, atau WEBP.");
   }
   if (file.size > PHOTO_MAX_BYTES) {
     throw new Error("Foto lebih dari 10 MB. Pilih foto yang lebih kecil.");
   }
-
-  const url = URL.createObjectURL(file);
-  try {
-    const image = await loadImage(url).catch(() => {
-      throw new Error("Foto tidak bisa dibaca browser. Coba simpan ulang sebagai JPG atau PNG.");
-    });
-    const side = Math.min(image.naturalWidth, image.naturalHeight);
-    const canvas = document.createElement("canvas");
-    canvas.width = PHOTO_SIZE;
-    canvas.height = PHOTO_SIZE;
-    canvas.getContext("2d").drawImage(
-      image,
-      (image.naturalWidth - side) / 2, (image.naturalHeight - side) / 2, side, side,
-      0, 0, PHOTO_SIZE, PHOTO_SIZE
-    );
-    return canvas.toDataURL("image/jpeg", 0.85);
-  } finally {
-    URL.revokeObjectURL(url);
-  }
+  return loadImage(url).catch(() => {
+    throw new Error("Foto tidak bisa dibaca browser. Coba simpan ulang sebagai JPG atau PNG.");
+  });
 }
+
+// =====================================
+// POTONG FOTO
+// Foto digeser dan diperbesar di dalam kotak persegi; bagian yang terlihat
+// di kotak itu yang disimpan sebagai 256x256 JPEG.
+// =====================================
+
+const cropDialog = document.getElementById("cropDialog");
+const cropStage = document.getElementById("cropStage");
+const cropImage = document.getElementById("cropImage");
+const cropZoom = document.getElementById("cropZoom");
+const CROP_MAX_ZOOM = 4;
+
+// size: sisi kotak (px layar); base: skala agar foto pas menutupi kotak; x, y: posisi pojok kiri atas foto
+const crop = { image: null, size: 0, base: 1, zoom: 1, x: 0, y: 0, pointers: new Map(), resolve: null };
+
+function cropScale() {
+  return crop.base * crop.zoom;
+}
+
+// Foto selalu menutupi seluruh kotak: tidak boleh ada celah kosong di tepinya
+function drawCrop() {
+  const scale = cropScale();
+  const width = crop.image.naturalWidth * scale;
+  const height = crop.image.naturalHeight * scale;
+  crop.x = Math.min(0, Math.max(crop.size - width, crop.x));
+  crop.y = Math.min(0, Math.max(crop.size - height, crop.y));
+  cropImage.style.transform = `translate(${crop.x}px, ${crop.y}px) scale(${scale})`;
+  cropZoom.value = crop.zoom;
+}
+
+// Perbesar dengan titik fokus tetap di tempat (tengah kotak, posisi mouse, atau tengah dua jari)
+function zoomCropTo(zoom, focusX = crop.size / 2, focusY = crop.size / 2) {
+  const next = Math.min(CROP_MAX_ZOOM, Math.max(1, zoom));
+  const ratio = next / crop.zoom;
+  crop.x = focusX - (focusX - crop.x) * ratio;
+  crop.y = focusY - (focusY - crop.y) * ratio;
+  crop.zoom = next;
+  drawCrop();
+}
+
+// Hitung ulang saat dibuka atau saat ukuran layar berubah, dengan titik tengah yang sama
+function layoutCrop(keepCenter) {
+  let centerX = crop.image.naturalWidth / 2;
+  let centerY = crop.image.naturalHeight / 2;
+  if (keepCenter && crop.size) {
+    centerX = (crop.size / 2 - crop.x) / cropScale();
+    centerY = (crop.size / 2 - crop.y) / cropScale();
+  }
+
+  crop.size = cropStage.clientWidth;
+  crop.base = crop.size / Math.min(crop.image.naturalWidth, crop.image.naturalHeight);
+  crop.x = crop.size / 2 - centerX * cropScale();
+  crop.y = crop.size / 2 - centerY * cropScale();
+  drawCrop();
+}
+
+function openCrop(image) {
+  crop.image = image;
+  crop.zoom = 1;
+  crop.size = 0;
+  crop.pointers.clear();
+  cropImage.src = image.src;
+  cropImage.style.width = `${image.naturalWidth}px`;
+  cropImage.style.height = `${image.naturalHeight}px`;
+
+  cropDialog.showModal();
+  layoutCrop(false);
+  cropStage.focus();
+
+  return new Promise((resolve) => {
+    crop.resolve = resolve;
+  });
+}
+
+function finishCrop(result) {
+  if (crop.resolve) {
+    crop.resolve(result);
+    crop.resolve = null;
+  }
+  crop.pointers.clear();
+  cropStage.classList.remove("dragging");
+  if (cropDialog.open) cropDialog.close();
+}
+
+// Ambil area kotak dari foto asli (resolusi penuh), lalu perkecil ke 256x256
+function croppedPhoto() {
+  const scale = cropScale();
+  const canvas = document.createElement("canvas");
+  canvas.width = PHOTO_SIZE;
+  canvas.height = PHOTO_SIZE;
+  const context = canvas.getContext("2d");
+  context.imageSmoothingQuality = "high";
+  context.drawImage(
+    crop.image,
+    -crop.x / scale, -crop.y / scale, crop.size / scale, crop.size / scale,
+    0, 0, PHOTO_SIZE, PHOTO_SIZE
+  );
+  return canvas.toDataURL("image/jpeg", 0.85);
+}
+
+function stagePoint(event) {
+  const rect = cropStage.getBoundingClientRect();
+  return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+}
+
+// Satu jari atau mouse: geser. Dua jari: cubit untuk memperbesar, sambil menggeser.
+cropStage.addEventListener("pointerdown", function(event) {
+  try {
+    cropStage.setPointerCapture(event.pointerId);
+  } catch {
+    // Pointer buatan (misalnya dari tes) tidak bisa ditangkap; geser tetap jalan
+  }
+  crop.pointers.set(event.pointerId, stagePoint(event));
+  cropStage.classList.add("dragging");
+});
+
+cropStage.addEventListener("pointermove", function(event) {
+  if (!crop.pointers.has(event.pointerId)) return;
+  const point = stagePoint(event);
+
+  if (crop.pointers.size === 1) {
+    const last = crop.pointers.get(event.pointerId);
+    crop.x += point.x - last.x;
+    crop.y += point.y - last.y;
+    crop.pointers.set(event.pointerId, point);
+    drawCrop();
+    return;
+  }
+
+  const [a, b] = [...crop.pointers.values()];
+  const before = { mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, distance: Math.hypot(a.x - b.x, a.y - b.y) };
+  crop.pointers.set(event.pointerId, point);
+  const [c, d] = [...crop.pointers.values()];
+  const after = { mid: { x: (c.x + d.x) / 2, y: (c.y + d.y) / 2 }, distance: Math.hypot(c.x - d.x, c.y - d.y) };
+
+  crop.x += after.mid.x - before.mid.x;
+  crop.y += after.mid.y - before.mid.y;
+  if (before.distance > 0) {
+    zoomCropTo(crop.zoom * (after.distance / before.distance), after.mid.x, after.mid.y);
+  } else {
+    drawCrop();
+  }
+});
+
+function releasePointer(event) {
+  crop.pointers.delete(event.pointerId);
+  if (!crop.pointers.size) cropStage.classList.remove("dragging");
+}
+
+cropStage.addEventListener("pointerup", releasePointer);
+cropStage.addEventListener("pointercancel", releasePointer);
+
+cropStage.addEventListener("wheel", function(event) {
+  event.preventDefault();
+  const point = stagePoint(event);
+  zoomCropTo(crop.zoom * (event.deltaY < 0 ? 1.1 : 1 / 1.1), point.x, point.y);
+}, { passive: false });
+
+cropStage.addEventListener("keydown", function(event) {
+  const step = event.shiftKey ? 40 : 10;
+  const moves = { ArrowLeft: [step, 0], ArrowRight: [-step, 0], ArrowUp: [0, step], ArrowDown: [0, -step] };
+
+  if (moves[event.key]) {
+    crop.x += moves[event.key][0];
+    crop.y += moves[event.key][1];
+    drawCrop();
+  } else if (event.key === "+" || event.key === "=") {
+    zoomCropTo(crop.zoom + 0.2);
+  } else if (event.key === "-") {
+    zoomCropTo(crop.zoom - 0.2);
+  } else {
+    return;
+  }
+  event.preventDefault();
+});
+
+cropZoom.addEventListener("input", () => zoomCropTo(Number(cropZoom.value)));
+document.getElementById("cropIn").addEventListener("click", () => zoomCropTo(crop.zoom + 0.25));
+document.getElementById("cropOut").addEventListener("click", () => zoomCropTo(crop.zoom - 0.25));
+document.getElementById("cropApply").addEventListener("click", () => finishCrop(croppedPhoto()));
+document.getElementById("cropCancel").addEventListener("click", () => finishCrop(null));
+cropDialog.addEventListener("cancel", () => finishCrop(null));
+
+window.addEventListener("resize", function() {
+  if (cropDialog.open) layoutCrop(true);
+});
 
 // Nomor Indonesia: 08..., 628..., atau +628..., 10-15 digit; spasi dan strip boleh
 function validPhone(phone) {
@@ -1724,12 +1895,21 @@ photoInput.addEventListener("change", async function() {
   const file = photoInput.files[0];
   if (!file) return;
 
-  setHint("photoHint", "Memproses foto...");
+  setHint("photoHint", "Membuka foto...");
+  const url = URL.createObjectURL(file);
   try {
-    draftPhoto = await photoFromFile(file);
-    setHint("photoHint", "Foto siap. Tekan Simpan perubahan untuk memakainya.");
+    const image = await imageFromFile(file, url);
+    const result = await openCrop(image);
+    if (result) {
+      draftPhoto = result;
+      setHint("photoHint", "Foto siap. Tekan Simpan perubahan untuk memakainya.");
+    } else {
+      setHint("photoHint", PROFILE_HINTS.photo);
+    }
   } catch (error) {
     setHint("photoHint", error.message, true);
+  } finally {
+    URL.revokeObjectURL(url);
   }
   photoInput.value = "";
   renderProfileAvatar();

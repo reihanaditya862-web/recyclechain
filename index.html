@@ -440,6 +440,28 @@
     </div>
   </dialog>
 
+  <!-- Potong foto profil: geser dan perbesar, hasilnya 256x256 -->
+  <dialog class="confirm-dialog crop-dialog" id="cropDialog" aria-labelledby="cropTitle">
+    <div class="confirm-body">
+      <h2 id="cropTitle">Atur foto profil</h2>
+      <p class="confirm-note">Geser foto untuk mengatur posisinya, lalu perbesar atau perkecil.
+        Bagian di dalam lingkaran yang dipakai.</p>
+      <div class="crop-stage" id="cropStage" tabindex="0"
+        aria-label="Area potong foto. Tombol panah untuk menggeser, plus dan minus untuk memperbesar.">
+        <img id="cropImage" alt="" draggable="false">
+      </div>
+      <div class="crop-zoom">
+        <button type="button" class="btn zoom-btn" id="cropOut" aria-label="Perkecil">&minus;</button>
+        <input type="range" id="cropZoom" min="1" max="4" step="0.01" value="1" aria-label="Perbesar foto">
+        <button type="button" class="btn zoom-btn" id="cropIn" aria-label="Perbesar">+</button>
+      </div>
+      <div class="confirm-actions">
+        <button type="button" class="btn" id="cropCancel">Batal</button>
+        <button type="button" class="btn primary" id="cropApply">Pakai foto</button>
+      </div>
+    </div>
+  </dialog>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="js/data.js"></script>

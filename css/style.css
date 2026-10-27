@@ -1297,6 +1297,53 @@ select.input {
 
 .form-foot { gap: 12px; }
 
+/* Pemotong foto: kotak persegi, lingkaran panduan, luar lingkaran digelapkan */
+.crop-stage {
+  position: relative;
+  justify-self: center;
+  width: 100%;
+  max-width: 360px;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--radius-inner);
+  background: var(--raised);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.crop-stage.dragging { cursor: grabbing; }
+.crop-stage:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.crop-stage img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: none;
+  transform-origin: 0 0;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.crop-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+.crop-zoom {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.crop-zoom input { flex: 1; min-width: 0; accent-color: var(--accent); }
+.zoom-btn { width: var(--control-height); padding: 0; font-size: 20px; }
+
 .visually-hidden {
   position: absolute;
   width: 1px;
