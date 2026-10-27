@@ -1172,6 +1172,172 @@ select.input {
   .auth-title { font-size: 24px; line-height: 32px; }
 }
 
+/* ---------- animated icons (skill animated-icons) ----------
+   Token gerak bersama, dipasang sekali */
+
+:root {
+  --icon-dur-press: 120ms;
+  --icon-dur-swap: 200ms;
+  --icon-dur-draw: 350ms;
+  --icon-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --icon-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --icon-ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --icon-press-scale: 0.94;
+  --icon-swap-scale: 0.7;
+  --icon-swap-blur: 2px;
+}
+
+/* Ikon di dalam tombol mengikuti warna teks tombol */
+.ic-svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ic-btn:active { transform: scale(var(--icon-press-scale)); }
+
+/* Bagian SVG berputar di pusatnya sendiri, bukan di pojok viewBox */
+.ic-glyph,
+.ic-bin,
+.ic-bin-item,
+.ic-gift,
+.ic-gift-box,
+.ic-sparks {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Tutup tempat sampah dan tutup kado berengsel di kiri bawah */
+.ic-bin-lid,
+.ic-gift-lid {
+  transform-box: fill-box;
+  transform-origin: 0% 100%;
+  transition: transform var(--icon-dur-swap) var(--icon-ease-out);
+}
+
+.ic-bin-item,
+.ic-sparks { opacity: 0; }
+.ic-gift-box { transform-origin: 50% 100%; }
+
+/* Dua tulisan di satu sel: tombol selebar tulisan terpanjang, jadi tidak bergeser */
+.btn-labels { display: grid; }
+
+.btn-labels > span {
+  grid-area: 1 / 1;
+  text-align: center;
+  transition:
+    opacity var(--icon-dur-swap) ease,
+    transform var(--icon-dur-swap) var(--icon-ease-out);
+}
+
+.label-done { opacity: 0; transform: translateY(6px); }
+
+/* Ikon ke centang: ikon memudar dan mengecil, centang tergambar sendiri */
+.ic-glyph {
+  transition:
+    opacity var(--icon-dur-swap) ease,
+    transform var(--icon-dur-swap) var(--icon-ease-in-out),
+    filter var(--icon-dur-swap) ease;
+}
+
+.ic-check-mark {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset var(--icon-dur-swap) ease;
+}
+
+.ic-btn.is-done .ic-glyph {
+  opacity: 0;
+  transform: scale(var(--icon-swap-scale));
+  filter: blur(var(--icon-swap-blur));
+}
+
+.ic-btn.is-done .ic-check-mark {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset var(--icon-dur-draw) var(--icon-ease-out) 120ms;
+}
+
+.ic-btn.is-done .label-idle { opacity: 0; transform: translateY(-6px); }
+.ic-btn.is-done .label-done { opacity: 1; transform: none; }
+
+/* Saat disorot mouse, tutup tempat sampah sedikit terbuka: "ini tempat menaruh sampah" */
+@media (hover: hover) and (pointer: fine) {
+  .ic-deposit:hover:not(.is-playing):not(.is-done) .ic-bin-lid,
+  .ic-deposit:focus-visible:not(.is-playing):not(.is-done) .ic-bin-lid {
+    transform: translateY(-1px) rotate(-12deg);
+  }
+}
+
+/* Setor: tutup terbuka, botol jatuh masuk, tutup menutup memantul, tempat sampah bergoyang */
+.ic-deposit.is-playing .ic-bin-lid { animation: ic-bin-lid 900ms var(--icon-ease-out); }
+.ic-deposit.is-playing .ic-bin-item { animation: ic-bin-drop 900ms var(--icon-ease-in-out); }
+.ic-deposit.is-playing .ic-bin { animation: ic-bin-wiggle 900ms ease; }
+
+@keyframes ic-bin-lid {
+  0% { transform: none; }
+  20%, 58% { transform: translateY(-1.5px) rotate(-30deg); }
+  72% { transform: rotate(5deg); }
+  84%, 100% { transform: none; }
+}
+
+/* Botol muncul di atas, lalu jatuh melewati mulut tempat sampah (terpotong clipPath) */
+@keyframes ic-bin-drop {
+  0% { opacity: 0; transform: translateY(-4px); }
+  16% { opacity: 1; transform: translateY(-4px); }
+  54% { opacity: 1; transform: translateY(12px); }
+  55%, 100% { opacity: 0; transform: translateY(12px); }
+}
+
+@keyframes ic-bin-wiggle {
+  0%, 70% { transform: none; }
+  77% { transform: rotate(-7deg); }
+  85% { transform: rotate(6deg); }
+  92% { transform: rotate(-3deg); }
+  100% { transform: none; }
+}
+
+/* Tukar: kotak kado memantul, tutupnya meloncat, kilau menyebar */
+.ic-redeem.is-playing .ic-gift-box { animation: ic-gift-squash 750ms var(--icon-ease-out); }
+.ic-redeem.is-playing .ic-gift-lid { animation: ic-gift-lid 750ms var(--icon-ease-bounce); }
+.ic-redeem.is-playing .ic-sparks { animation: ic-gift-sparks 750ms var(--icon-ease-out); }
+
+@keyframes ic-gift-squash {
+  0% { transform: none; }
+  14% { transform: scale(1.1, 0.86); }
+  32% { transform: scale(0.96, 1.06); }
+  48%, 100% { transform: none; }
+}
+
+@keyframes ic-gift-lid {
+  0%, 10% { transform: none; }
+  30%, 58% { transform: translateY(-6px) rotate(-14deg); }
+  80% { transform: translateY(0.5px) rotate(3deg); }
+  100% { transform: none; }
+}
+
+@keyframes ic-gift-sparks {
+  0%, 18% { opacity: 0; transform: translateY(4px) scale(0.5); }
+  40% { opacity: 1; transform: translateY(-1px) scale(1); }
+  75%, 100% { opacity: 0; transform: translateY(-4px) scale(1.25); }
+}
+
+/* Gerak dikurangi: tanpa loncatan dan goyangan, perubahan ke centang tetap terlihat */
+@media (prefers-reduced-motion: reduce) {
+  .ic-btn.is-playing .ic-svg { animation: ic-blink 250ms ease; }
+  .ic-btn.is-done .ic-glyph { transform: none; filter: none; }
+  .ic-btn.is-done .ic-check-mark { transition: none; }
+  .btn-labels > span { transform: none !important; }
+  .ic-btn:active { transform: none; }
+}
+
+@keyframes ic-blink { 50% { opacity: 0.4; } }
+
 /* ---------- moving between screens ----------
    The title and each block of the new screen rise into place one after another.
    script.js adds .entering and numbers the blocks with --i; only on navigation. */

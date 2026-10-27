@@ -612,7 +612,9 @@ function renderTukar(totals) {
       if (!canRedeem(item)) {
         action = `<a class="btn" href="#paket" data-view="paket">Lihat paket</a>`;
       } else if (cost <= totals.balance) {
-        action = `<button type="button" class="btn" data-redeem="${item.id}">Tukar</button>`;
+        action = `<button type="button" class="btn ic-btn ic-redeem" data-redeem="${item.id}">${GIFT_ICON}
+          <span class="btn-labels"><span class="label-idle">Tukar</span><span class="label-done" aria-hidden="true">Ditukar</span></span>
+        </button>`;
       } else {
         action = `<span class="short num">Kurang ${formatPoints(cost - totals.balance)} poin</span>`;
       }
@@ -956,6 +958,9 @@ depositForm.addEventListener("submit", async function(event) {
 
   depositForm.reset();
   renderDepositPreview(summarize());
+
+  // Tutup terbuka, botol jatuh masuk, lalu centang
+  celebrate(document.getElementById("depositSubmit"), { shot: 900, hold: 1400 });
 });
 
 // =====================================
@@ -965,6 +970,9 @@ depositForm.addEventListener("submit", async function(event) {
 document.addEventListener("click", async function(event) {
   const button = event.target.closest("[data-redeem]");
   if (!button) return;
+
+  // Animasi masih berjalan: abaikan klik kedua
+  if (button.classList.contains("is-playing") || button.classList.contains("is-done")) return;
 
   const item = reward(button.dataset.redeem);
   const balance = summarize().balance;
@@ -993,11 +1001,53 @@ document.addEventListener("click", async function(event) {
 
   if (!confirmed) return;
 
+  // Simpan sekarang (aman kalau halaman ditutup), tapi gambar ulang daftar setelah
+  // animasi kado selesai, karena tombol ini bisa hilang saat daftar diperbarui
   state.redemptions.push({ date: DATA.asOf, reward: item.id, cost, seq: ++sequence });
-  saveAndRender();
-
+  saveData();
   showToast(`Poin ditukar: ${item.name}. Sisa saldo ${formatPoints(summarize().balance)} poin.`);
+
+  await celebrate(button, { shot: 750, hold: 900 });
+  renderAll();
 });
+
+// =====================================
+// ANIMASI TOMBOL (skill animated-icons)
+// Satu kali jalan: is-playing memutar keyframes, is-done menukar ikon ke centang
+// dan tulisan ke "selesai", lalu kembali seperti semula.
+// =====================================
+
+const GIFT_ICON = `
+  <svg class="ic-svg" viewBox="0 0 24 24" aria-hidden="true">
+    <g class="ic-glyph">
+      <g class="ic-gift">
+        <g class="ic-sparks">
+          <path d="M12 -4v2.5"/><path d="M4.5 -1.5l1.8 1.8"/><path d="M19.5 -1.5l-1.8 1.8"/>
+        </g>
+        <g class="ic-gift-lid">
+          <rect x="3.5" y="8" width="17" height="4" rx="1"/>
+          <path d="M12 8v4"/>
+          <path d="M12 8C10.5 5 7 4.5 7 6.5S9.5 8 12 8c2.5 0 5-.5 5-1.5S13.5 5 12 8z"/>
+        </g>
+        <g class="ic-gift-box"><path d="M5.5 12v8.5h13V12"/><path d="M12 12v8.5"/></g>
+      </g>
+    </g>
+    <path class="ic-check-mark" d="M5 12.5 10 17.5 19 7" pathLength="1"/>
+  </svg>`;
+
+const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function celebrate(button, { shot, hold }) {
+  button.classList.remove("is-playing", "is-done");
+  void button.offsetWidth; // reflow: animasi selalu mulai dari awal
+  button.classList.add("is-playing");
+  await pause(reducedMotion.matches ? 250 : shot);
+
+  button.classList.remove("is-playing");
+  button.classList.add("is-done");
+  await pause(hold);
+  button.classList.remove("is-done");
+}
 
 // =====================================
 // FITUR 3: RIWAYAT

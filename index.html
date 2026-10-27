@@ -260,7 +260,27 @@
               <dl class="well num" id="depositPreview"></dl>
 
               <div class="form-foot">
-                <button type="submit" class="btn primary">Ajukan setoran</button>
+                <button type="submit" class="btn primary ic-btn ic-deposit" id="depositSubmit">
+                  <svg class="ic-svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <!-- Botol hanya terlihat di atas mulut tempat sampah (y < 7), jadi seperti jatuh masuk -->
+                    <clipPath id="binMouth"><rect x="-4" y="-12" width="32" height="18.5"/></clipPath>
+                    <g class="ic-glyph">
+                      <g class="ic-bin">
+                        <g clip-path="url(#binMouth)">
+                          <path class="ic-bin-item" d="M11 -5.5h2v1.5l1 1.5v4.5h-4V-2.5l1-1.5z"/>
+                        </g>
+                        <g class="ic-bin-lid"><path d="M4 7h16"/><path d="M9 7V4.5h6V7"/></g>
+                        <path d="M6 7l1 13.5h10L18 7"/>
+                        <path d="M10 11v6M14 11v6"/>
+                      </g>
+                    </g>
+                    <path class="ic-check-mark" d="M5 12.5 10 17.5 19 7" pathLength="1"/>
+                  </svg>
+                  <span class="btn-labels">
+                    <span class="label-idle">Ajukan setoran</span>
+                    <span class="label-done" aria-hidden="true">Setoran diajukan</span>
+                  </span>
+                </button>
               </div>
             </form>
           </div>
