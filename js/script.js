@@ -107,8 +107,16 @@ let sequence = 0;
 const state = {
   deposits: DATA.deposits.map((item) => ({ ...item, seq: ++sequence })),
   redemptions: DATA.redemptions.map((item) => ({ ...item, seq: ++sequence })),
-  ledgerFilter: "all"
+  ledgerFilter: "all",
+
+  // Langganan (simulasi): Basic tidak punya tagihan
+  plan: DATA.member.plan,
+  period: "monthly",      // periode yang sedang dipilih di layar Paket
+  subscription: null      // { planId, period, amount, paidOn, nextBill }
 };
+
+const PLAN_RANK = { basic: 0, premium: 1, super: 2 };
+const PERIOD_NAMES = { monthly: "Bulanan", yearly: "Tahunan" };
 
 function material(id) {
   return DATA.materials[id];
@@ -116,6 +124,40 @@ function material(id) {
 
 function reward(id) {
   return DATA.rewards.find((item) => item.id === id);
+}
+
+function planById(id) {
+  return DATA.plans.find((item) => item.id === id);
+}
+
+function currentPlan() {
+  return planById(state.plan);
+}
+
+// Reward bisa ditukar kalau paket sekarang setara atau di atas paket minimumnya
+function canRedeem(item) {
+  return PLAN_RANK[state.plan] >= PLAN_RANK[item.plan];
+}
+
+// Harga reward untuk paket sekarang: reward non-Basic dapat diskon paket
+function rewardCost(item) {
+  if (item.plan === "basic") return item.cost;
+  return Math.round(item.cost * (100 - currentPlan().refurbishDiscount) / 100);
+}
+
+// Penukaran mencatat harga saat ditukar, karena diskon bisa berubah
+function redemptionCost(item) {
+  return item.cost ?? reward(item.reward).cost;
+}
+
+function planPrice(plan, period) {
+  return period === "yearly" ? plan.yearly : plan.monthly;
+}
+
+function addMonths(iso, months) {
+  const date = parseDate(iso);
+  date.setMonth(date.getMonth() + months);
+  return toIso(date);
 }
 
 function depositPoints(deposit) {
@@ -139,12 +181,12 @@ function summarize() {
   const done = state.deposits.filter((item) => item.status === "done");
   const pending = state.deposits.filter((item) => item.status === "pending");
   const earned = sum(done.map(depositPoints));
-  const spent = sum(state.redemptions.map((item) => reward(item.reward).cost));
+  const spent = sum(state.redemptions.map(redemptionCost));
   const weekStart = addDays(DATA.asOf, -7);
 
   const weekChange =
     sum(done.filter((item) => item.date > weekStart).map(depositPoints)) -
-    sum(state.redemptions.filter((item) => item.date > weekStart).map((item) => reward(item.reward).cost));
+    sum(state.redemptions.filter((item) => item.date > weekStart).map(redemptionCost));
 
   const byMaterial = Object.keys(DATA.materials).map((id) => {
     const rows = done.filter((item) => item.material === id);
@@ -213,7 +255,7 @@ function ledger() {
     title: reward(item.reward).name,
     detail: "Penukaran poin",
     kg: null,
-    points: -reward(item.reward).cost,
+    points: -redemptionCost(item),
     pending: false
   }));
 
@@ -369,13 +411,23 @@ function renderBeranda(totals) {
   document.getElementById("recentRows").innerHTML = rows.slice(0, 5).map(activityRow).join("");
 
   // Paket kamu, dengan paket berikutnya yang paling murah
-  const current = DATA.plans.find((plan) => plan.id === DATA.member.plan);
-  const upgrade = DATA.plans.find((plan) => plan.monthly > current.monthly);
+  const current = currentPlan();
+  const upgrade = DATA.plans.find((plan) => PLAN_RANK[plan.id] > PLAN_RANK[current.id]);
+  const sub = state.subscription;
+  let text;
+
+  if (current.id === "basic") {
+    text = `Reward barang refurbish dan jemput gratis untuk setoran di atas 5 kg ada di ${upgrade.name}, ` +
+      `mulai ${formatRupiah(upgrade.monthly)} per bulan.`;
+  } else {
+    text = `Aktif, tagihan berikutnya ${formatRupiah(sub.amount)} pada ${formatDate(sub.nextBill, true)}. ` +
+      `Reward refurbish diskon ${current.refurbishDiscount}%.`;
+    if (upgrade) text += ` ${upgrade.name} memberi diskon ${upgrade.refurbishDiscount}%.`;
+  }
+
   document.getElementById("planTitle").textContent = `Paket kamu: ${current.name}`;
-  document.getElementById("planText").textContent = upgrade
-    ? `Reward barang refurbish dan jemput gratis untuk setoran di atas 5 kg ada di ${upgrade.name}, ` +
-      `mulai ${formatRupiah(upgrade.monthly)} per bulan.`
-    : "Kamu sudah memakai paket tertinggi.";
+  document.getElementById("planText").textContent = text;
+  document.getElementById("planLink").textContent = current.id === "basic" ? "Bandingkan paket" : "Kelola paket";
 }
 
 function activityRow(row) {
@@ -483,12 +535,13 @@ function renderPending(totals) {
 // =====================================
 
 function renderTukar(totals) {
-  const basic = DATA.rewards.filter((item) => item.plan === "basic");
-  const ready = basic.filter((item) => item.cost <= totals.balance);
+  const available = DATA.rewards.filter(canRedeem);
+  const ready = available.filter((item) => rewardCost(item) <= totals.balance);
   const next = rewardSteps(totals.balance).find((step) => !step.ready);
 
   screenSubs.tukar =
-    `${ready.length} dari ${basic.length} reward Basic bisa ditukar dengan saldo ${formatPoints(totals.balance)} poin.`;
+    `${ready.length} dari ${available.length} reward di paket ${currentPlan().name} bisa ditukar ` +
+    `dengan saldo ${formatPoints(totals.balance)} poin.`;
 
   document.getElementById("tukarWell").innerHTML = `
     <dt>Bisa ditukar sekarang</dt><dd>${ready.length} reward</dd>
@@ -505,16 +558,22 @@ function renderTukar(totals) {
     .slice()
     .sort((a, b) => a.cost - b.cost)
     .map((item) => {
+      const cost = rewardCost(item);
       let action;
-      if (item.plan !== DATA.member.plan && item.plan !== "basic") {
+      if (!canRedeem(item)) {
         action = `<a class="btn" href="#paket" data-view="paket">Lihat paket</a>`;
-      } else if (item.cost <= totals.balance) {
+      } else if (cost <= totals.balance) {
         action = `<button type="button" class="btn" data-redeem="${item.id}">Tukar</button>`;
       } else {
-        action = `<span class="short num">Kurang ${formatPoints(item.cost - totals.balance)} poin</span>`;
+        action = `<span class="short num">Kurang ${formatPoints(cost - totals.balance)} poin</span>`;
       }
 
-      const sub = item.plan === "basic" ? item.category : `${item.category}, khusus Premium dan Super`;
+      let sub = item.category;
+      if (item.plan !== "basic") {
+        sub += canRedeem(item)
+          ? `, diskon ${currentPlan().name} ${currentPlan().refurbishDiscount}% dari ${formatPoints(item.cost)} poin`
+          : ", khusus Premium dan Super";
+      }
 
       return `
         <div class="row reward-row">
@@ -522,7 +581,7 @@ function renderTukar(totals) {
             <strong>${escapeHtml(item.name)}</strong>
             <span>${escapeHtml(sub)}</span>
           </span>
-          <span class="cost num">${formatPoints(item.cost)} poin</span>
+          <span class="cost num">${formatPoints(cost)} poin</span>
           <span class="action">${action}</span>
         </div>`;
     }).join("");
@@ -615,23 +674,61 @@ function renderRiwayat(totals) {
 // =====================================
 
 function renderPaket() {
-  const current = DATA.plans.find((plan) => plan.id === DATA.member.plan);
+  const current = currentPlan();
+  const sub = state.subscription;
+  const period = state.period;
+
   document.getElementById("memberName").textContent = DATA.member.name;
   document.getElementById("memberInitials").textContent = DATA.member.initials;
   document.getElementById("memberPlan").textContent = `Paket ${current.name}`;
 
+  screenSubs.paket = current.id === "basic"
+    ? "Kamu memakai Basic, gratis tanpa biaya langganan. Premium dan Super menambah reward barang refurbish."
+    : `Kamu memakai ${current.name} (${PERIOD_NAMES[sub.period].toLowerCase()}). ` +
+      `Reward refurbish bisa ditukar dengan diskon ${current.refurbishDiscount}%.`;
+
+  document.querySelectorAll("#periodToggle button").forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.period === period));
+  });
+
+  const bestSaving = Math.max(...DATA.plans.map((plan) => plan.monthly * 12 - plan.yearly));
+  document.getElementById("periodNote").textContent = period === "yearly"
+    ? `Bayar setahun sekaligus, hemat sampai ${formatRupiah(bestSaving)}.`
+    : "Ditagih setiap bulan, bisa berhenti kapan saja.";
+
   document.getElementById("plans").innerHTML = DATA.plans.map((plan) => {
-    const isCurrent = plan.id === DATA.member.plan;
-    const price = plan.monthly === 0
-      ? "Gratis"
-      : `${formatRupiah(plan.monthly)} <small>/bulan</small>`;
+    const isCurrent = plan.id === current.id;
     const saving = plan.monthly * 12 - plan.yearly;
-    const yearly = plan.monthly === 0
-      ? "Tanpa biaya langganan"
-      : `atau ${formatRupiah(plan.yearly)} per tahun, hemat ${formatRupiah(saving)}`;
-    const button = isCurrent
-      ? `<button type="button" class="btn" disabled>Paket saat ini</button>`
-      : `<button type="button" class="btn" data-plan="${plan.id}">Pilih ${escapeHtml(plan.name)}</button>`;
+    let price;
+    let note;
+
+    if (plan.monthly === 0) {
+      price = "Gratis";
+      note = "Tanpa biaya langganan";
+    } else if (period === "yearly") {
+      price = `${formatRupiah(plan.yearly)} <small>/tahun</small>`;
+      note = `<span class="plan-was">${formatRupiah(plan.monthly * 12)}</span> hemat ${formatRupiah(saving)}`;
+    } else {
+      price = `${formatRupiah(plan.monthly)} <small>/bulan</small>`;
+      note = `atau ${formatRupiah(plan.yearly)} per tahun, hemat ${formatRupiah(saving)}`;
+    }
+
+    // Satu tombol per kartu, sesuai arah perpindahan paket
+    let button;
+    if (isCurrent && (plan.id === "basic" || sub.period === period)) {
+      button = `<button type="button" class="btn" disabled>Paket saat ini</button>`;
+    } else if (isCurrent) {
+      button = `<button type="button" class="btn" data-plan="${plan.id}">Ganti ke ${PERIOD_NAMES[period].toLowerCase()}</button>`;
+    } else if (plan.id === "basic") {
+      button = `<button type="button" class="btn" data-plan="basic">Berhenti berlangganan</button>`;
+    } else if (PLAN_RANK[plan.id] > PLAN_RANK[current.id]) {
+      // Hanya paket satu tingkat di atas yang jadi tombol utama
+      const label = current.id === "basic" ? `Pilih ${plan.name}` : `Upgrade ke ${plan.name}`;
+      const tone = PLAN_RANK[plan.id] === PLAN_RANK[current.id] + 1 ? "btn primary" : "btn";
+      button = `<button type="button" class="${tone}" data-plan="${plan.id}">${escapeHtml(label)}</button>`;
+    } else {
+      button = `<button type="button" class="btn" data-plan="${plan.id}">Pindah ke ${escapeHtml(plan.name)}</button>`;
+    }
 
     return `
       <article class="card plan">
@@ -640,7 +737,7 @@ function renderPaket() {
           ${isCurrent ? `<span class="pill pos">Paket kamu</span>` : ""}
         </div>
         <p class="plan-price num">${price}</p>
-        <p class="plan-yearly num">${yearly}</p>
+        <p class="plan-yearly num">${note}</p>
         <ul>
           ${plan.features.map((feature) => `
             <li><svg class="check" aria-hidden="true"><use href="#i-check"/></svg>${escapeHtml(feature)}</li>`).join("")}
@@ -649,9 +746,17 @@ function renderPaket() {
       </article>`;
   }).join("");
 
-  document.getElementById("billingWell").innerHTML = `
-    <dt>Paket sekarang</dt><dd>${escapeHtml(current.name)}</dd>
-    <dt>Tagihan berikutnya</dt><dd>${current.monthly ? formatRupiah(current.monthly) : "—"}</dd>
+  document.getElementById("billingText").textContent = sub
+    ? "Pembayaran di prototype ini adalah simulasi. Tidak ada uang yang ditagih."
+    : "Basic tidak punya tagihan. Pilih Premium atau Super untuk mencoba simulasi langganan.";
+
+  document.getElementById("billingWell").innerHTML = sub ? `
+    <dt>Paket sekarang</dt><dd>${escapeHtml(current.name)}, ${PERIOD_NAMES[sub.period].toLowerCase()}</dd>
+    <dt>Dibayar terakhir</dt><dd>${formatRupiah(sub.amount)} pada ${formatDate(sub.paidOn, true)}</dd>
+    <dt>Tagihan berikutnya</dt><dd>${formatRupiah(sub.amount)} pada ${formatDate(sub.nextBill, true)}</dd>
+    <dt>Metode pembayaran</dt><dd>Simulasi</dd>` : `
+    <dt>Paket sekarang</dt><dd>Basic</dd>
+    <dt>Tagihan berikutnya</dt><dd>—</dd>
     <dt>Metode pembayaran</dt><dd>Belum ada</dd>`;
 }
 
@@ -813,8 +918,14 @@ document.addEventListener("click", async function(event) {
 
   const item = reward(button.dataset.redeem);
   const balance = summarize().balance;
+  const cost = rewardCost(item);
 
-  if (balance < item.cost) {
+  if (!canRedeem(item)) {
+    showToast(`${item.name} khusus paket Premium dan Super.`);
+    return;
+  }
+
+  if (balance < cost) {
     showToast(`Poin belum cukup. Saldo kamu ${formatPoints(balance)} poin.`);
     return;
   }
@@ -823,8 +934,8 @@ document.addEventListener("click", async function(event) {
     title: "Tukar poin",
     rows: [
       ["Reward", item.name],
-      ["Biaya", `${formatPoints(item.cost)} poin`],
-      ["Saldo setelah ditukar", `${formatPoints(balance - item.cost)} poin`]
+      ["Biaya", `${formatPoints(cost)} poin`],
+      ["Saldo setelah ditukar", `${formatPoints(balance - cost)} poin`]
     ],
     note: "Ini simulasi. Tidak ada pulsa, voucher, atau token yang benar-benar dikirim.",
     okLabel: "Tukar poin"
@@ -832,7 +943,7 @@ document.addEventListener("click", async function(event) {
 
   if (!confirmed) return;
 
-  state.redemptions.push({ date: DATA.asOf, reward: item.id, seq: ++sequence });
+  state.redemptions.push({ date: DATA.asOf, reward: item.id, cost, seq: ++sequence });
   renderAll();
 
   showToast(`Poin ditukar: ${item.name}. Sisa saldo ${formatPoints(summarize().balance)} poin.`);
@@ -859,18 +970,63 @@ document.addEventListener("click", async function(event) {
   const button = event.target.closest("[data-plan]");
   if (!button) return;
 
-  const plan = DATA.plans.find((item) => item.id === button.dataset.plan);
+  const plan = planById(button.dataset.plan);
+  const previous = currentPlan();
 
-  await askConfirm({
-    title: `Paket ${plan.name}`,
+  // Berhenti berlangganan: kembali ke Basic, poin dan riwayat tetap
+  if (plan.id === "basic") {
+    const confirmed = await askConfirm({
+      title: "Berhenti berlangganan",
+      rows: [
+        ["Paket sekarang", previous.name],
+        ["Setelah berhenti", "Basic, gratis"]
+      ],
+      note: "Reward refurbish tidak bisa ditukar lagi. Poin dan riwayat kamu tetap aman.",
+      okLabel: "Berhenti berlangganan"
+    });
+
+    if (!confirmed) return;
+
+    state.plan = "basic";
+    state.subscription = null;
+    renderAll();
+    showToast("Langganan dihentikan. Kamu kembali ke Basic.");
+    return;
+  }
+
+  // Berlangganan, upgrade, pindah paket, atau ganti periode
+  const period = state.period;
+  const amount = planPrice(plan, period);
+  const nextBill = addMonths(DATA.asOf, period === "yearly" ? 12 : 1);
+
+  const confirmed = await askConfirm({
+    title: `Langganan ${plan.name}`,
     rows: [
-      ["Per bulan", formatRupiah(plan.monthly)],
-      ["Per tahun", formatRupiah(plan.yearly)]
+      ["Paket", `${plan.name}, ${PERIOD_NAMES[period].toLowerCase()}`],
+      ["Bayar sekarang", formatRupiah(amount)],
+      ["Aktif mulai", formatDate(DATA.asOf, true)],
+      ["Tagihan berikutnya", formatDate(nextBill, true)]
     ],
-    note: "Pembayaran belum aktif di prototype ini, jadi paket kamu tetap Basic.",
-    okLabel: "Mengerti",
-    cancelLabel: null
+    note: "Ini simulasi. Tidak ada uang yang ditagih. Pembayaran sungguhan perlu payment gateway dan server.",
+    okLabel: "Bayar dan aktifkan"
   });
+
+  if (!confirmed) return;
+
+  state.plan = plan.id;
+  state.subscription = { planId: plan.id, period, amount, paidOn: DATA.asOf, nextBill };
+  renderAll();
+
+  showToast(`Paket ${plan.name} aktif. Reward refurbish sekarang diskon ${plan.refurbishDiscount}%.`);
+});
+
+// Pilihan periode di layar Paket
+document.getElementById("periodToggle").addEventListener("click", function(event) {
+  const button = event.target.closest("[data-period]");
+  if (!button) return;
+
+  state.period = button.dataset.period;
+  renderPaket();
 });
 
 // =====================================

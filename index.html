@@ -132,7 +132,7 @@
                   <h2 id="planTitle">Paket kamu</h2>
                 </header>
                 <p class="plan-text" id="planText"></p>
-                <a class="btn pinned" href="#paket" data-view="paket">Bandingkan paket</a>
+                <a class="btn pinned" href="#paket" data-view="paket" id="planLink">Bandingkan paket</a>
               </article>
             </div>
           </div>
@@ -267,12 +267,20 @@
 
         <!-- PAKET MEMBERSHIP -->
         <section class="view" data-view-name="paket" aria-labelledby="screenTitle" hidden>
+          <div class="period-row">
+            <div class="segmented" role="group" aria-label="Periode tagihan" id="periodToggle">
+              <button type="button" data-period="monthly" aria-pressed="true">Bulanan</button>
+              <button type="button" data-period="yearly" aria-pressed="false">Tahunan</button>
+            </div>
+            <span class="meta" id="periodNote"></span>
+          </div>
+
           <div class="plans" id="plans"></div>
 
           <div class="settings-row billing">
             <div class="settings-label">
               <h2>Tagihan</h2>
-              <p>Basic tidak punya tagihan. Pembayaran Premium dan Super belum aktif di prototype ini.</p>
+              <p id="billingText"></p>
             </div>
             <div class="card">
               <dl class="well num" id="billingWell"></dl>

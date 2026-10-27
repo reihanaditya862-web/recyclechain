@@ -65,6 +65,7 @@ const DATA = {
       name: "Basic",
       monthly: 0,
       yearly: 0,
+      refurbishDiscount: 0,
       features: [
         "Setor sampah dan e-waste",
         "Tukar pulsa, voucher, token, dan donasi",
@@ -76,6 +77,7 @@ const DATA = {
       name: "Premium",
       monthly: 50000,
       yearly: 500000,
+      refurbishDiscount: 10,
       features: [
         "Semua fitur Basic",
         "Reward barang refurbish",
@@ -88,6 +90,7 @@ const DATA = {
       name: "Super",
       monthly: 100000,
       yearly: 1000000,
+      refurbishDiscount: 25,
       features: [
         "Semua fitur Premium",
         "Diskon 25% dan akses flash sale",
