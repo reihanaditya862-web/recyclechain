@@ -1289,6 +1289,52 @@ document.getElementById("logoutBtn").addEventListener("click", async function() 
 });
 
 // =====================================
+// FITUR 7: TEMA
+// Disimpan per browser; "light" berarti tanpa atribut (token :root)
+// =====================================
+
+const THEME_KEY = "recyclechain-theme";
+const THEMES = {
+  light: "Terang",
+  dark: "Gelap",
+  "glass-light": "Liquid glass terang",
+  "glass-dark": "Liquid glass gelap"
+};
+
+function currentTheme() {
+  return document.documentElement.dataset.rcTheme || "light";
+}
+
+function applyTheme(theme) {
+  if (!(theme in THEMES)) theme = "light";
+
+  if (theme === "light") {
+    delete document.documentElement.dataset.rcTheme;
+  } else {
+    document.documentElement.dataset.rcTheme = theme;
+  }
+
+  document.querySelectorAll(".theme-select").forEach((select) => {
+    select.value = theme;
+  });
+
+  try {
+    localStorage.setItem(THEME_KEY, theme);
+  } catch {
+    // Browser menolak penyimpanan: tema tetap berlaku sampai halaman ditutup
+  }
+}
+
+document.querySelectorAll(".theme-select").forEach((select) => {
+  select.innerHTML = Object.entries(THEMES)
+    .map(([id, name]) => `<option value="${id}">${name}</option>`)
+    .join("");
+  select.value = currentTheme();
+
+  select.addEventListener("change", () => applyTheme(select.value));
+});
+
+// =====================================
 // INISIALISASI
 // =====================================
 

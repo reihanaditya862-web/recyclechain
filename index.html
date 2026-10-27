@@ -8,6 +8,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <script>
+    // Pasang tema tersimpan sebelum halaman tampil, agar tidak berkedip
+    try {
+      var savedTheme = localStorage.getItem("recyclechain-theme");
+      if (savedTheme && savedTheme !== "light") document.documentElement.dataset.rcTheme = savedTheme;
+    } catch (e) {}
+  </script>
 </head>
 <body>
 
@@ -43,6 +50,10 @@
         voucher belanja, token listrik, atau donasi lingkungan.</p>
       <p class="auth-rates-label">Tarif poin per kg</p>
       <ul class="auth-rates" id="authRates"></ul>
+      <div class="theme-picker">
+        <label for="authThemeSelect">Tema</label>
+        <select class="input theme-select" id="authThemeSelect"></select>
+      </div>
     </div>
 
     <div class="card auth-card">
@@ -95,6 +106,11 @@
         <a class="nav-item" href="#riwayat" data-view="riwayat"><svg><use href="#i-history"/></svg>Riwayat</a>
         <a class="nav-item" href="#paket" data-view="paket"><svg><use href="#i-layers"/></svg>Paket membership</a>
       </nav>
+
+      <div class="theme-picker">
+        <label for="themeSelect">Tema</label>
+        <select class="input theme-select" id="themeSelect"></select>
+      </div>
 
       <a class="member" href="#paket" data-view="paket">
         <span class="avatar" id="memberInitials">EH</span>
