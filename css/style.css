@@ -54,7 +54,9 @@
 /* ---------- reset ---------- */
 
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+/* Ruang scrollbar selalu dipesan, agar halaman tidak bergeser ke samping
+   saat pindah dari layar pendek ke layar panjang */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scrollbar-gutter: stable; }
 body {
   margin: 0;
   background: var(--ground);
@@ -213,8 +215,11 @@ svg use { pointer-events: none; }
 
 .title-row h1:focus { outline: none; }
 
+/* Kalimat di bawah judul selalu memakai ruang dua baris, agar kartu di bawahnya
+   mulai di posisi yang sama di setiap layar dan tidak naik turun saat isinya berubah */
 .title-row .sub {
   max-width: 64ch;
+  min-height: 48px;
   margin-top: 4px;
   color: var(--muted);
 }
@@ -623,6 +628,9 @@ svg use { pointer-events: none; }
 .field legend { margin-bottom: 8px; }
 .hint { color: var(--muted); font-size: var(--fs-small); line-height: 20px; }
 
+/* Keterangan yang berganti isi (cara menyetor) memesan dua baris */
+.hint.reserve { min-height: 40px; }
+
 .input {
   width: 100%;
   height: var(--control-height);
@@ -749,7 +757,8 @@ svg use { pointer-events: none; }
 /* ---------- rewards ---------- */
 
 .reward-row { grid-template-columns: minmax(0, 1fr) 96px 132px; }
-.reward-row .action { display: flex; justify-content: flex-end; }
+/* Tombol dan teks "Kurang ... poin" memakai tinggi yang sama, agar baris tidak berubah tinggi */
+.reward-row .action { display: flex; align-items: center; justify-content: flex-end; min-height: var(--control-height); }
 .reward-row .short { color: var(--muted); font-size: var(--fs-small); text-align: right; }
 .reward-row .cost { text-align: right; }
 
@@ -852,7 +861,12 @@ svg use { pointer-events: none; }
   font-weight: 500;
 }
 
+/* Tinggi tetap, agar "Gratis" dan "Rp50.000 /bulan" sejajar di semua kartu */
 .plan-price {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  height: 40px;
   margin-top: 12px;
   font-size: var(--fs-kpi);
   line-height: 40px;
@@ -861,7 +875,8 @@ svg use { pointer-events: none; }
 }
 
 .plan-price small { color: var(--muted); font-size: var(--fs-body); font-weight: 500; letter-spacing: 0; }
-.plan-yearly { color: var(--muted); font-size: var(--fs-small); line-height: 20px; }
+/* Dua baris tetap, karena teks bulanan dan tahunan berbeda panjangnya */
+.plan-yearly { min-height: 40px; color: var(--muted); font-size: var(--fs-small); line-height: 20px; }
 
 .plan ul {
   display: grid;

@@ -56,7 +56,7 @@ const DATA = {
     { id: "data-5gb", name: "Paket data 5 GB", short: "paket data 5 GB", category: "Pulsa dan data", cost: 1200, plan: "basic" },
     { id: "voucher-10k", name: "Voucher belanja Rp10.000", short: "voucher belanja", category: "Voucher belanja", cost: 1500, plan: "basic" },
     { id: "token-10k", name: "Token listrik Rp10.000", short: "token listrik", category: "Token listrik", cost: 1500, plan: "basic" },
-    { id: "refurbish", name: "Perangkat elektronik refurbish", short: "perangkat refurbish", category: "Elektronik, mulai dari", cost: 8000, plan: "premium" }
+    { id: "refurbish", name: "Perangkat elektronik refurbish", short: "perangkat refurbish", category: "Elektronik", cost: 8000, plan: "premium" }
   ],
 
   plans: [

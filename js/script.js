@@ -571,7 +571,7 @@ function renderTukar(totals) {
       let sub = item.category;
       if (item.plan !== "basic") {
         sub += canRedeem(item)
-          ? `, diskon ${currentPlan().name} ${currentPlan().refurbishDiscount}% dari ${formatPoints(item.cost)} poin`
+          ? `, diskon ${currentPlan().name} ${currentPlan().refurbishDiscount}%`
           : ", khusus Premium dan Super";
       }
 
@@ -684,9 +684,8 @@ function renderPaket() {
   document.getElementById("memberPlan").textContent = `Paket ${current.name}`;
 
   screenSubs.paket = current.id === "basic"
-    ? "Kamu memakai Basic, gratis tanpa biaya langganan. Premium dan Super menambah reward barang refurbish."
-    : `Kamu memakai ${current.name} (${PERIOD_NAMES[sub.period].toLowerCase()}). ` +
-      `Reward refurbish bisa ditukar dengan diskon ${current.refurbishDiscount}%.`;
+    ? "Kamu memakai Basic, gratis tanpa biaya langganan."
+    : `Kamu memakai ${current.name} ${PERIOD_NAMES[sub.period].toLowerCase()}, diskon refurbish ${current.refurbishDiscount}%.`;
 
   document.querySelectorAll("#periodToggle button").forEach((button) => {
     button.setAttribute("aria-pressed", String(button.dataset.period === period));
@@ -757,6 +756,7 @@ function renderPaket() {
     <dt>Tagihan berikutnya</dt><dd>${formatRupiah(sub.amount)} pada ${formatDate(sub.nextBill, true)}</dd>
     <dt>Metode pembayaran</dt><dd>Simulasi</dd>` : `
     <dt>Paket sekarang</dt><dd>Basic</dd>
+    <dt>Dibayar terakhir</dt><dd>—</dd>
     <dt>Tagihan berikutnya</dt><dd>—</dd>
     <dt>Metode pembayaran</dt><dd>Belum ada</dd>`;
 }
