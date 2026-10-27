@@ -1057,6 +1057,22 @@ svg use { pointer-events: none; }
   .confirm-actions .btn { flex: 1; }
 }
 
+/* ---------- moving between screens ----------
+   The title and each block of the new screen rise into place one after another.
+   script.js adds .entering and numbers the blocks with --i; only on navigation. */
+
+@keyframes screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+.entering-item {
+  animation: screen-in 380ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     transition-duration: 0.01ms !important;

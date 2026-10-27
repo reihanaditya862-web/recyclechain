@@ -1062,6 +1062,30 @@ document.addEventListener("keydown", function(event) {
   }
 });
 
+// Animasi masuk saat pindah layar: judul dulu, lalu tiap blok berurutan
+const SCREEN_BLOCKS = ".title-row, .split > .card, .stack > *, .settings-label, .settings-row > .card, " +
+  ".settings-row > form, .period-row, .plans > .card";
+let screenInTimer;
+
+function playScreenIn(name) {
+  const view = document.querySelector(`.view[data-view-name="${name}"]`);
+  const blocks = [document.querySelector(".canvas > .title-row"), ...view.querySelectorAll(SCREEN_BLOCKS)];
+
+  document.querySelectorAll(".entering-item").forEach((item) => item.classList.remove("entering-item"));
+  void view.offsetWidth; // mulai ulang animasi walau layar yang sama dibuka lagi
+
+  blocks.forEach((block, index) => {
+    block.style.setProperty("--i", Math.min(index, 8));
+    block.classList.add("entering-item");
+  });
+
+  // Lepas kelasnya setelah selesai, agar render ulang tidak memutar animasi lagi
+  clearTimeout(screenInTimer);
+  screenInTimer = setTimeout(() => {
+    blocks.forEach((block) => block.classList.remove("entering-item"));
+  }, 380 + 8 * 60 + 100);
+}
+
 function showView(name, moveFocus) {
   if (!(name in VIEWS)) name = "beranda";
   currentView = name;
@@ -1085,6 +1109,7 @@ function showView(name, moveFocus) {
 
   if (moveFocus) {
     document.getElementById("screenTitle").focus({ preventScroll: true });
+    playScreenIn(name);
   }
 }
 
