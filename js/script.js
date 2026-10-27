@@ -12,12 +12,14 @@ const VIEWS = {
   setor: "Setor sampah",
   tukar: "Tukar poin",
   riwayat: "Riwayat",
-  paket: "Paket membership"
+  paket: "Paket membership",
+  profil: "Profil"
 };
 
 // Kalimat di bawah judul tiap layar; yang berisi angka diisi saat render
 const screenSubs = {
   setor: "Ajukan setoran, lalu serahkan sampahnya. Poin masuk setelah mitra menimbang.",
+  profil: "Ubah foto, nama, nomor telepon, dan email akunmu.",
   paket: "Kamu memakai Basic, gratis tanpa biaya langganan. Premium dan Super menambah reward barang refurbish."
 };
 
@@ -727,7 +729,7 @@ function renderPaket() {
 
   const account = state.account || DATA.member;
   document.getElementById("memberName").textContent = account.name;
-  document.getElementById("memberInitials").textContent = account.initials;
+  renderAvatar(document.getElementById("memberInitials"), account);
   document.getElementById("memberPlan").textContent = `Paket ${current.name}`;
 
   screenSubs.paket = current.id === "basic"
@@ -1143,7 +1145,7 @@ function showView(name, moveFocus) {
     view.hidden = view.dataset.viewName !== name;
   });
 
-  document.querySelectorAll(".nav-item").forEach(function(link) {
+  document.querySelectorAll(".nav-item, .member").forEach(function(link) {
     if (link.dataset.view === name) {
       link.setAttribute("aria-current", "page");
     } else {
@@ -1153,6 +1155,7 @@ function showView(name, moveFocus) {
 
   // Panduan sampah diukur saat layarnya terlihat, karena layar tersembunyi tidak punya lebar
   if (name === "setor") renderLookup();
+  if (name === "profil") fillProfileForm();
 
   topbarTitle.textContent = VIEWS[name];
   closeSidebar();
@@ -1217,13 +1220,34 @@ function knownAccounts() {
   }
 }
 
+// Profil yang dikenali untuk satu email; versi lama hanya menyimpan nama sebagai teks
+function knownAccount(email) {
+  const entry = knownAccounts()[email];
+  if (!entry) return null;
+  return typeof entry === "string" ? { name: entry } : entry;
+}
+
 function saveAccount(account) {
+  const profile = { name: account.name, phone: account.phone || "", photo: account.photo || null };
   try {
     localStorage.setItem(ACCOUNT_KEY, JSON.stringify(account));
-    localStorage.setItem(KNOWN_KEY, JSON.stringify({ ...knownAccounts(), [account.email]: account.name }));
+    localStorage.setItem(KNOWN_KEY, JSON.stringify({ ...knownAccounts(), [account.email]: profile }));
   } catch {
-    // Browser menolak penyimpanan: akun tetap aktif sampai halaman ditutup
+    // Browser menolak penyimpanan (misalnya penuh): akun tetap aktif sampai halaman ditutup
   }
+}
+
+// Akun lengkap dari email dan profil yang dikenali
+function accountFor(email, fallbackName) {
+  const known = knownAccount(email);
+  const name = (known && known.name) || fallbackName;
+  return {
+    name,
+    email,
+    initials: initialsOf(name),
+    phone: (known && known.phone) || "",
+    photo: (known && known.photo) || null
+  };
 }
 
 function forgetAccount() {
@@ -1315,22 +1339,19 @@ authForm.addEventListener("submit", function(event) {
 
   if (authMode === "daftar") {
     enterApp(
-      { name, email, initials: initialsOf(name) },
+      { name, email, initials: initialsOf(name), phone: "", photo: null },
       `Akun dibuat. Selamat datang, ${name.split(" ")[0]}! Akun baru memakai data contoh.`
     );
     return;
   }
 
-  // Masuk: pakai nama yang pernah didaftarkan dengan email ini, kalau ada
-  const accountName = knownAccounts()[email] || nameFromEmail(email);
-  enterApp(
-    { name: accountName, email, initials: initialsOf(accountName) },
-    `Berhasil masuk. Halo, ${accountName.split(" ")[0]}!`
-  );
+  // Masuk: pakai profil yang pernah disimpan untuk email ini, kalau ada
+  const account = accountFor(email, nameFromEmail(email));
+  enterApp(account, `Berhasil masuk. Halo, ${account.name.split(" ")[0]}!`);
 });
 
 document.getElementById("demoLogin").addEventListener("click", function() {
-  enterApp({ ...DATA.member, email: "eco.hero@contoh.id" }, "Masuk sebagai Eco Hero dengan data contoh.");
+  enterApp(accountFor("eco.hero@contoh.id", DATA.member.name), "Masuk sebagai Eco Hero dengan data contoh.");
 });
 
 document.getElementById("logoutBtn").addEventListener("click", async function() {
@@ -1593,6 +1614,198 @@ document.addEventListener("click", function(event) {
 });
 
 renderLookup();
+
+// =====================================
+// FITUR 10: PROFIL (SIMULASI)
+// Foto diperkecil jadi 256x256 JPEG di browser, lalu disimpan bersama akun.
+// Tidak ada yang dikirim ke server.
+// =====================================
+
+const profileForm = document.getElementById("profileForm");
+const photoInput = document.getElementById("photoInput");
+const PHOTO_SIZE = 256;
+const PHOTO_MAX_BYTES = 10 * 1024 * 1024;
+
+// Foto yang sedang diedit: undefined = tidak berubah, null = dihapus, teks = foto baru
+let draftPhoto;
+
+const PROFILE_HINTS = {
+  photo: "JPG, PNG, atau WEBP dari galeri atau penyimpanan, maksimal 10 MB.",
+  name: "Dipakai di sidebar dan sapaan.",
+  phone: "Boleh dikosongkan. Contoh 0812 3456 7890.",
+  email: "Dipakai untuk masuk. Data poinmu ikut pindah kalau email diganti."
+};
+
+// Foto kalau ada, inisial kalau tidak
+function renderAvatar(el, account) {
+  if (account.photo) {
+    el.innerHTML = `<img src="${escapeHtml(account.photo)}" alt="">`;
+  } else {
+    el.textContent = account.initials || initialsOf(account.name);
+  }
+}
+
+function setHint(id, text, isError) {
+  const hint = document.getElementById(id);
+  hint.textContent = text;
+  hint.classList.toggle("error", Boolean(isError));
+}
+
+function fillProfileForm() {
+  if (!state.account) return;
+  draftPhoto = undefined;
+  photoInput.value = "";
+
+  document.getElementById("profileName").value = state.account.name;
+  document.getElementById("profilePhone").value = state.account.phone || "";
+  document.getElementById("profileEmail").value = state.account.email;
+
+  setHint("photoHint", PROFILE_HINTS.photo);
+  setHint("profileNameHint", PROFILE_HINTS.name);
+  setHint("profilePhoneHint", PROFILE_HINTS.phone);
+  setHint("profileEmailHint", PROFILE_HINTS.email);
+  renderProfileAvatar();
+}
+
+function renderProfileAvatar() {
+  const name = document.getElementById("profileName").value.trim() || state.account.name;
+  const photo = draftPhoto === undefined ? state.account.photo : draftPhoto;
+  renderAvatar(document.getElementById("profileAvatar"), { name, initials: initialsOf(name), photo });
+  document.getElementById("photoRemove").disabled = !photo;
+}
+
+function loadImage(url) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("unreadable"));
+    image.src = url;
+  });
+}
+
+// Potong bagian tengah jadi persegi, perkecil, simpan sebagai JPEG
+async function photoFromFile(file) {
+  if (!file.type.startsWith("image/")) {
+    throw new Error("File itu bukan gambar. Pilih foto JPG, PNG, atau WEBP.");
+  }
+  if (file.size > PHOTO_MAX_BYTES) {
+    throw new Error("Foto lebih dari 10 MB. Pilih foto yang lebih kecil.");
+  }
+
+  const url = URL.createObjectURL(file);
+  try {
+    const image = await loadImage(url).catch(() => {
+      throw new Error("Foto tidak bisa dibaca browser. Coba simpan ulang sebagai JPG atau PNG.");
+    });
+    const side = Math.min(image.naturalWidth, image.naturalHeight);
+    const canvas = document.createElement("canvas");
+    canvas.width = PHOTO_SIZE;
+    canvas.height = PHOTO_SIZE;
+    canvas.getContext("2d").drawImage(
+      image,
+      (image.naturalWidth - side) / 2, (image.naturalHeight - side) / 2, side, side,
+      0, 0, PHOTO_SIZE, PHOTO_SIZE
+    );
+    return canvas.toDataURL("image/jpeg", 0.85);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+// Nomor Indonesia: 08..., 628..., atau +628..., 10-15 digit; spasi dan strip boleh
+function validPhone(phone) {
+  const digits = phone.replace(/[\s-]/g, "");
+  return /^(\+62|62|0)8\d{7,12}$/.test(digits);
+}
+
+document.getElementById("photoPick").addEventListener("click", () => photoInput.click());
+
+photoInput.addEventListener("change", async function() {
+  const file = photoInput.files[0];
+  if (!file) return;
+
+  setHint("photoHint", "Memproses foto...");
+  try {
+    draftPhoto = await photoFromFile(file);
+    setHint("photoHint", "Foto siap. Tekan Simpan perubahan untuk memakainya.");
+  } catch (error) {
+    setHint("photoHint", error.message, true);
+  }
+  photoInput.value = "";
+  renderProfileAvatar();
+});
+
+document.getElementById("photoRemove").addEventListener("click", function() {
+  draftPhoto = null;
+  setHint("photoHint", "Foto akan dihapus setelah Simpan perubahan.");
+  renderProfileAvatar();
+});
+
+document.getElementById("profileName").addEventListener("input", renderProfileAvatar);
+document.getElementById("profileReset").addEventListener("click", fillProfileForm);
+
+profileForm.addEventListener("submit", function(event) {
+  event.preventDefault();
+
+  const name = document.getElementById("profileName").value.trim();
+  const phone = document.getElementById("profilePhone").value.trim();
+  const email = document.getElementById("profileEmail").value.trim().toLowerCase();
+  const oldEmail = state.account.email;
+  let valid = true;
+
+  setHint("profileNameHint", PROFILE_HINTS.name);
+  setHint("profilePhoneHint", PROFILE_HINTS.phone);
+  setHint("profileEmailHint", PROFILE_HINTS.email);
+
+  if (name.length < 2) {
+    setHint("profileNameHint", "Isi nama lengkap, minimal 2 huruf.", true);
+    valid = false;
+  }
+  if (phone && !validPhone(phone)) {
+    setHint("profilePhoneHint", "Nomor belum benar. Mulai dengan 08 atau +62, 10 sampai 15 digit.", true);
+    valid = false;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    setHint("profileEmailHint", "Format email belum benar, misalnya nama@email.com.", true);
+    valid = false;
+  } else if (email !== oldEmail && knownAccount(email)) {
+    setHint("profileEmailHint", "Email ini sudah dipakai akun lain di browser ini.", true);
+    valid = false;
+  }
+
+  if (!valid) {
+    // Kursor ke kolom pertama yang salah (dicari lewat aria-describedby keterangannya)
+    const firstError = profileForm.querySelector(".field .hint.error");
+    profileForm.querySelector(`[aria-describedby="${firstError.id}"]`).focus();
+    return;
+  }
+
+  state.account = {
+    name,
+    email,
+    initials: initialsOf(name),
+    phone,
+    photo: draftPhoto === undefined ? state.account.photo : draftPhoto
+  };
+
+  // Email diganti: pindahkan data poin dan profil ke email baru
+  if (email !== oldEmail) {
+    try {
+      localStorage.removeItem(DATA_KEY_PREFIX + oldEmail);
+      const known = knownAccounts();
+      delete known[oldEmail];
+      localStorage.setItem(KNOWN_KEY, JSON.stringify(known));
+    } catch {
+      // Tidak ada yang perlu dipindahkan
+    }
+  }
+
+  saveAccount(state.account);
+  saveData();
+  renderAll();
+  fillProfileForm();
+  showToast("Profil disimpan.");
+});
 
 // =====================================
 // FITUR 7: TEMA

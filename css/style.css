@@ -156,7 +156,8 @@ svg use { pointer-events: none; }
   transition: background-color var(--t-hover) ease;
 }
 
-.member:hover { background: var(--active); }
+.member:hover,
+.member[aria-current="page"] { background: var(--active); }
 .member strong, .member small { display: block; }
 .member strong { font-weight: 600; }
 .member small { color: var(--muted); font-size: var(--fs-small); }
@@ -1267,6 +1268,47 @@ select.input {
 @media (max-width: 640px) {
   .lookup-item { grid-template-columns: minmax(0, 1fr); row-gap: 8px; align-content: center; }
   .lookup-action { justify-content: space-between; }
+}
+
+/* ---------- profil ---------- */
+
+.avatar { overflow: hidden; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.avatar-lg {
+  width: 96px;
+  height: 96px;
+  font-size: 28px;
+}
+
+.profile-photo {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.profile-photo-side { display: grid; gap: 8px; min-width: 0; }
+.profile-photo-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Keterangan di bawah tiap kolom memesan dua baris; pesan error menggantikannya
+   di tempat yang sama, jadi form tidak bergeser */
+#profileForm .hint { min-height: 40px; }
+.hint.error { color: var(--pill-negative-ink); }
+
+.form-foot { gap: 12px; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .profile-photo { align-items: flex-start; }
+  .avatar-lg { width: 80px; height: 80px; font-size: 24px; flex: none; }
 }
 
 /* =========================================

@@ -112,7 +112,7 @@
         <select class="input theme-select" id="themeSelect"></select>
       </div>
 
-      <a class="member" href="#paket" data-view="paket">
+      <a class="member" href="#profil" data-view="profil" aria-label="Profil akun">
         <span class="avatar" id="memberInitials">EH</span>
         <span>
           <strong id="memberName">Eco Hero</strong>
@@ -343,6 +343,57 @@
                 <p class="fine">Data riwayat adalah data contoh.</p>
               </article>
             </div>
+          </div>
+        </section>
+
+        <!-- PROFIL (simulasi, hanya di browser ini) -->
+        <section class="view" data-view-name="profil" aria-labelledby="screenTitle" hidden>
+          <div class="settings-row">
+            <div class="settings-label">
+              <h2>Data diri</h2>
+              <p>Foto, nama, nomor telepon, dan email akunmu. Semuanya hanya disimpan di browser ini
+                dan tidak dikirim ke mana pun.</p>
+            </div>
+
+            <form class="card form" id="profileForm" novalidate>
+              <div class="profile-photo">
+                <span class="avatar avatar-lg" id="profileAvatar" aria-hidden="true"></span>
+                <div class="profile-photo-side">
+                  <div class="profile-photo-actions">
+                    <button type="button" class="btn" id="photoPick">Pilih foto</button>
+                    <button type="button" class="btn" id="photoRemove">Hapus foto</button>
+                  </div>
+                  <span class="hint" id="photoHint" aria-live="polite"></span>
+                  <input type="file" id="photoInput" accept="image/*" class="visually-hidden" tabindex="-1"
+                    aria-hidden="true">
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="profileName">Nama lengkap</label>
+                <input class="input" type="text" id="profileName" autocomplete="name" aria-describedby="profileNameHint">
+                <span class="hint" id="profileNameHint"></span>
+              </div>
+
+              <div class="form-pair">
+                <div class="field">
+                  <label for="profilePhone">Nomor telepon</label>
+                  <input class="input num" type="tel" id="profilePhone" inputmode="tel" autocomplete="tel"
+                    aria-describedby="profilePhoneHint">
+                  <span class="hint" id="profilePhoneHint"></span>
+                </div>
+                <div class="field">
+                  <label for="profileEmail">Email</label>
+                  <input class="input" type="email" id="profileEmail" autocomplete="email" aria-describedby="profileEmailHint">
+                  <span class="hint" id="profileEmailHint"></span>
+                </div>
+              </div>
+
+              <div class="form-foot">
+                <button type="button" class="btn" id="profileReset">Batalkan</button>
+                <button type="submit" class="btn primary">Simpan perubahan</button>
+              </div>
+            </form>
           </div>
         </section>
 
