@@ -1737,3 +1737,71 @@ select.input {
     backdrop-filter: var(--glass-blur);
   }
 }
+
+/* ---------- kontak Instagram ---------- */
+
+.ig-icon,
+.nav-external {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ig-icon { width: 18px; height: 18px; flex: none; }
+
+/* Tautan di sidebar: seperti item menu, dengan tanda "membuka tab baru" di kanan */
+.ig-nav { margin-top: auto; }
+.ig-nav span { flex: 1; }
+.ig-nav .nav-external { width: 14px; height: 14px; opacity: 0.7; }
+.sidebar .theme-picker { margin-top: 12px; }
+
+/* Kotak "Butuh info lebih lanjut?" di bawah setiap layar */
+.contact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 24px;
+  margin-top: 48px;
+}
+
+.contact-text { min-width: 0; }
+
+.contact-text h2 {
+  font-size: var(--fs-section);
+  line-height: 28px;
+  font-weight: 500;
+}
+
+.contact-text p { margin-top: 4px; color: var(--muted); }
+.contact + .foot { margin-top: 24px; }
+
+.contact-btn .ig-icon { transition: transform var(--icon-dur-swap) var(--icon-ease-bounce); }
+
+@media (hover: hover) and (pointer: fine) {
+  .contact-btn:hover .ig-icon { transform: rotate(-8deg) scale(1.12); }
+}
+
+/* Tautan kecil di layar masuk */
+.ig-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: var(--fs-small);
+  line-height: 20px;
+  text-underline-offset: 3px;
+}
+
+.ig-inline strong { color: var(--text); font-weight: 600; }
+.ig-inline:hover span { text-decoration: underline; }
+
+@media (max-width: 640px) {
+  .contact-btn { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-btn:hover .ig-icon { transform: none; }
+}
