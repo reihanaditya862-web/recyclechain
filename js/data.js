@@ -22,11 +22,44 @@ const DATA = {
 
   // Tarif contoh dalam poin per kg
   materials: {
-    plastik: { name: "Plastik", rate: 160 },
-    kertas: { name: "Kertas dan kardus", rate: 100 },
-    logam: { name: "Logam dan kaleng", rate: 240 },
-    elektronik: { name: "Elektronik bekas", rate: 800 }
+    plastik: { name: "Plastik", rate: 160, examples: "Botol, gelas, dan kemasan sabun. Bilas lalu pipihkan." },
+    kertas: { name: "Kertas dan kardus", rate: 100, examples: "Kardus, koran, buku bekas. Harus kering, lipat rata." },
+    logam: { name: "Logam dan kaleng", rate: 240, examples: "Kaleng minuman dan makanan, besi bekas. Bilas dulu." },
+    elektronik: { name: "Elektronik bekas", rate: 800, examples: "HP rusak, charger, kabel, baterai. Jangan dibongkar." }
   },
+
+  // Panduan "Cek jenis sampah": material null berarti belum diterima RecycleChain
+  wasteGuide: [
+    { name: "Botol plastik", words: "botol air mineral minuman aqua pet", material: "plastik", tip: "Lepas label kalau bisa, bilas, lalu pipihkan." },
+    { name: "Botol kecap atau saus plastik", words: "kecap saus sambal", material: "plastik", tip: "Bilas sampai bersih dari sisa kecap, lalu keringkan." },
+    { name: "Gelas plastik", words: "gelas cup air mineral es teh kopi", material: "plastik", tip: "Bilas dan tumpuk, lepas sedotannya." },
+    { name: "Kemasan sabun dan sampo", words: "deterjen sampo sabun jerigen pembersih pewangi", material: "plastik", tip: "Bilas sisa sabun, tutupnya ikut disetor." },
+    { name: "Kantong plastik", words: "kresek tas belanja plastik", material: "plastik", tip: "Pastikan kering dan bersih, gulung jadi satu." },
+    { name: "Wadah makanan plastik", words: "tupperware kotak makan toples mika", material: "plastik", tip: "Cuci dari sisa makanan dan minyak." },
+    { name: "Tutup botol plastik", words: "tutup galon", material: "plastik", tip: "Kumpulkan dalam satu kantong." },
+    { name: "Mainan plastik rusak", words: "mainan ember gayung", material: "plastik", tip: "Lepas bagian logam dan baterainya." },
+    { name: "Kardus", words: "karton dus kotak paket mi instan", material: "kertas", tip: "Lepas lakban, lipat rata, dan simpan di tempat kering." },
+    { name: "Koran dan majalah", words: "koran majalah tabloid brosur", material: "kertas", tip: "Ikat dengan tali, jangan sampai basah." },
+    { name: "Buku dan kertas bekas", words: "buku tulis hvs fotokopi kertas print", material: "kertas", tip: "Lepas sampul plastik dan jilid spiral." },
+    { name: "Kotak susu dan jus", words: "tetra pak karton susu jus", material: "kertas", tip: "Bilas, buka lipatannya, lalu pipihkan." },
+    { name: "Kaleng minuman", words: "kaleng soda minuman aluminium", material: "logam", tip: "Bilas dan injak sampai pipih." },
+    { name: "Kaleng makanan", words: "kaleng sarden susu kental manis kornet", material: "logam", tip: "Bilas sampai bersih, hati-hati tepi yang tajam." },
+    { name: "Panci dan wajan rusak", words: "panci wajan teflon peralatan dapur", material: "logam", tip: "Lepas gagang plastik atau kayunya kalau bisa." },
+    { name: "Besi dan paku bekas", words: "besi paku baut seng kawat", material: "logam", tip: "Bungkus bagian yang tajam sebelum disetor." },
+    { name: "HP rusak", words: "handphone hp ponsel smartphone tablet", material: "elektronik", tip: "Hapus data dan keluarkan kartu SIM lebih dulu." },
+    { name: "Charger dan kabel", words: "charger kabel adaptor usb headset earphone", material: "elektronik", tip: "Gulung kabel dan ikat supaya tidak kusut." },
+    { name: "Baterai bekas", words: "baterai batu batre aki", material: "elektronik", tip: "Tutup kutubnya dengan selotip, simpan terpisah." },
+    { name: "Lampu bekas", words: "lampu led neon bohlam", material: "elektronik", tip: "Bungkus agar tidak pecah. Lampu neon mengandung merkuri." },
+    { name: "Laptop dan perangkat kecil", words: "laptop komputer remote kipas setrika radio", material: "elektronik", tip: "Hapus data pribadi dan jangan dibongkar." },
+    { name: "Sisa makanan dan kulit buah", words: "sisa makanan nasi sayur kulit buah organik", material: null, tip: "Belum diterima. Olah jadi kompos atau eco-enzyme di rumah." },
+    { name: "Daun dan ranting", words: "daun ranting rumput kebun", material: null, tip: "Belum diterima. Cocok untuk kompos." },
+    { name: "Botol dan pecahan kaca", words: "kaca beling botol kaca sirup", material: null, tip: "Belum diterima. Kumpulkan terpisah untuk pengepul kaca." },
+    { name: "Styrofoam", words: "styrofoam gabus sterofoam", material: null, tip: "Belum diterima. Kurangi pemakaiannya." },
+    { name: "Popok dan pembalut", words: "popok pampers pembalut", material: null, tip: "Belum diterima. Buang ke sampah residu, dibungkus rapat." },
+    { name: "Tisu bekas", words: "tisu tissue", material: null, tip: "Belum diterima. Buang ke sampah residu." },
+    { name: "Minyak jelantah", words: "minyak goreng jelantah", material: null, tip: "Belum diterima. Simpan di botol, setor ke program jelantah." },
+    { name: "Obat kedaluwarsa", words: "obat kadaluarsa kedaluwarsa", material: null, tip: "Belum diterima. Serahkan ke apotek yang menerima obat bekas." }
+  ],
 
   methods: {
     jemput: { name: "Jemput terjadwal" },

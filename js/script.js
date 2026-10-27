@@ -902,7 +902,7 @@ depositForm.addEventListener("submit", async function(event) {
     seq: ++sequence
   });
 
-  renderAll();
+  saveAndRender();
   showToast(`Setoran diajukan. Perkiraan +${formatPoints(estimate)} poin setelah ditimbang.`);
 
   depositForm.reset();
@@ -945,7 +945,7 @@ document.addEventListener("click", async function(event) {
   if (!confirmed) return;
 
   state.redemptions.push({ date: DATA.asOf, reward: item.id, cost, seq: ++sequence });
-  renderAll();
+  saveAndRender();
 
   showToast(`Poin ditukar: ${item.name}. Sisa saldo ${formatPoints(summarize().balance)} poin.`);
 });
@@ -990,7 +990,7 @@ document.addEventListener("click", async function(event) {
 
     state.plan = "basic";
     state.subscription = null;
-    renderAll();
+    saveAndRender();
     showToast("Langganan dihentikan. Kamu kembali ke Basic.");
     return;
   }
@@ -1016,7 +1016,7 @@ document.addEventListener("click", async function(event) {
 
   state.plan = plan.id;
   state.subscription = { planId: plan.id, period, amount, paidOn: DATA.asOf, nextBill };
-  renderAll();
+  saveAndRender();
 
   showToast(`Paket ${plan.name} aktif. Reward refurbish sekarang diskon ${plan.refurbishDiscount}%.`);
 });
@@ -1104,6 +1104,9 @@ function showView(name, moveFocus) {
     }
   });
 
+  // Panduan sampah diukur saat layarnya terlihat, karena layar tersembunyi tidak punya lebar
+  if (name === "setor") renderLookup();
+
   topbarTitle.textContent = VIEWS[name];
   closeSidebar();
   window.scrollTo(0, 0);
@@ -1156,9 +1159,21 @@ function loadAccount() {
   }
 }
 
+// Daftar nama per email, tetap ada setelah keluar, agar "Masuk" mengenali nama yang didaftarkan
+const KNOWN_KEY = "recyclechain-known-accounts";
+
+function knownAccounts() {
+  try {
+    return JSON.parse(localStorage.getItem(KNOWN_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
+
 function saveAccount(account) {
   try {
     localStorage.setItem(ACCOUNT_KEY, JSON.stringify(account));
+    localStorage.setItem(KNOWN_KEY, JSON.stringify({ ...knownAccounts(), [account.email]: account.name }));
   } catch {
     // Browser menolak penyimpanan: akun tetap aktif sampai halaman ditutup
   }
@@ -1213,6 +1228,7 @@ function enterApp(account, message) {
 
   authScreen.hidden = true;
   appScreen.hidden = false;
+  loadData();
   renderAll();
   showView(location.hash.slice(1), false);
 
@@ -1259,8 +1275,7 @@ authForm.addEventListener("submit", function(event) {
   }
 
   // Masuk: pakai nama yang pernah didaftarkan dengan email ini, kalau ada
-  const known = loadAccount();
-  const accountName = known && known.email === email ? known.name : nameFromEmail(email);
+  const accountName = knownAccounts()[email] || nameFromEmail(email);
   enterApp(
     { name: accountName, email, initials: initialsOf(accountName) },
     `Berhasil masuk. Halo, ${accountName.split(" ")[0]}!`
@@ -1287,6 +1302,250 @@ document.getElementById("logoutBtn").addEventListener("click", async function() 
   showAuth();
   showToast("Kamu sudah keluar.");
 });
+
+// =====================================
+// FITUR 8: DATA TERSIMPAN
+// Setoran, penukaran, dan langganan disimpan per akun di browser ini.
+// Data yang rusak atau tidak dikenal diganti data contoh.
+// =====================================
+
+const DATA_KEY_PREFIX = "recyclechain-data:";
+
+function dataKey() {
+  return DATA_KEY_PREFIX + (state.account ? state.account.email : "tamu");
+}
+
+function sampleData() {
+  let seq = 0;
+  return {
+    deposits: DATA.deposits.map((item) => ({ ...item, seq: ++seq })),
+    redemptions: DATA.redemptions.map((item) => ({ ...item, seq: ++seq })),
+    plan: DATA.member.plan,
+    subscription: null
+  };
+}
+
+function isValidData(data) {
+  return Boolean(data) &&
+    Array.isArray(data.deposits) &&
+    Array.isArray(data.redemptions) &&
+    data.deposits.every((item) => item.material in DATA.materials && item.method in DATA.methods && item.kg > 0) &&
+    data.redemptions.every((item) => DATA.rewards.some((entry) => entry.id === item.reward)) &&
+    data.plan in PLAN_RANK &&
+    (data.plan === "basic" || Boolean(data.subscription));
+}
+
+function loadData() {
+  let saved = null;
+  try {
+    saved = JSON.parse(localStorage.getItem(dataKey()));
+  } catch {
+    saved = null;
+  }
+
+  const data = isValidData(saved) ? saved : sampleData();
+  state.deposits = data.deposits;
+  state.redemptions = data.redemptions;
+  state.plan = data.plan;
+  state.subscription = data.plan === "basic" ? null : data.subscription;
+  sequence = Math.max(0, ...state.deposits.map((item) => item.seq || 0), ...state.redemptions.map((item) => item.seq || 0));
+}
+
+function saveData() {
+  try {
+    localStorage.setItem(dataKey(), JSON.stringify({
+      deposits: state.deposits,
+      redemptions: state.redemptions,
+      plan: state.plan,
+      subscription: state.subscription
+    }));
+  } catch {
+    // Browser menolak penyimpanan: perubahan tetap berlaku sampai halaman ditutup
+  }
+}
+
+function saveAndRender() {
+  saveData();
+  renderAll();
+}
+
+document.getElementById("resetData").addEventListener("click", async function() {
+  const confirmed = await askConfirm({
+    title: "Kembalikan data contoh",
+    rows: [
+      ["Setoran", `${state.deposits.length} menjadi ${DATA.deposits.length}`],
+      ["Penukaran", `${state.redemptions.length} menjadi ${DATA.redemptions.length}`],
+      ["Paket", `${currentPlan().name} menjadi Basic`]
+    ],
+    note: "Semua setoran, penukaran, dan langganan di akun ini diganti data contoh awal.",
+    okLabel: "Kembalikan"
+  });
+
+  if (!confirmed) return;
+
+  Object.assign(state, sampleData());
+  sequence = state.deposits.length + state.redemptions.length;
+  saveAndRender();
+  showToast("Data contoh dikembalikan.");
+});
+
+// =====================================
+// FITUR 9: CEK JENIS SAMPAH
+// Kamus sederhana dari DATA.wasteGuide, tanpa AI
+// =====================================
+
+const lookupInput = document.getElementById("lookupInput");
+
+function normalizeText(text) {
+  return text.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+// Semua kata yang diketik harus muncul; nama yang cocok di depan diurutkan lebih dulu
+function searchGuide(query) {
+  const words = query.split(" ");
+  return DATA.wasteGuide
+    .map((item) => {
+      const name = item.name.toLowerCase();
+      const text = `${name} ${item.words}`;
+      if (!words.every((word) => text.includes(word))) return null;
+      const score = name.startsWith(query) ? 3 : name.includes(query) ? 2 : 1;
+      return { item, score };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.score - a.score)
+    .map((entry) => entry.item);
+}
+
+function lookupAction(materialId) {
+  return `
+    <span class="lookup-action">
+      <span class="meta num">${formatPoints(material(materialId).rate)} poin/kg</span>
+      <button type="button" class="btn" data-use-material="${materialId}">Setor ini</button>
+    </span>`;
+}
+
+// Selalu empat slot baris yang sama tinggi, agar form di bawahnya tidak bergeser saat mengetik
+const LOOKUP_SLOTS = 4;
+
+function fillSlots(rows) {
+  const blank = `<div class="row lookup-item placeholder" aria-hidden="true"></div>`;
+  return rows.concat(Array(Math.max(0, LOOKUP_SLOTS - rows.length)).fill(blank)).join("");
+}
+
+function categoryRow(id) {
+  const item = material(id);
+  return `
+    <div class="row lookup-item">
+      <span class="row-main">
+        <strong class="title-line"><span class="tag t-${id}">${escapeHtml(item.name)}</span></strong>
+        <span>${escapeHtml(item.examples)}</span>
+      </span>
+      ${lookupAction(id)}
+    </div>`;
+}
+
+function guideRow(item) {
+  const label = item.material
+    ? `<span class="tag t-${item.material}">${escapeHtml(material(item.material).name)}</span>`
+    : `<span class="pill">Belum diterima</span>`;
+
+  return `
+    <div class="row lookup-item">
+      <span class="row-main">
+        <strong class="title-line">${escapeHtml(item.name)} ${label}</strong>
+        <span>${escapeHtml(item.tip)}</span>
+      </span>
+      ${item.material ? lookupAction(item.material) : ""}
+    </div>`;
+}
+
+function notFoundRow(text) {
+  return `
+    <div class="row lookup-item">
+      <span class="row-main">
+        <strong>"${escapeHtml(text)}" belum ada di panduan</strong>
+        <span>Coba kata yang lebih umum, misalnya botol, kardus, kaleng, atau baterai.</span>
+      </span>
+    </div>`;
+}
+
+// Tinggi slot = baris terpanjang dari seluruh panduan pada lebar sekarang,
+// diukur diam-diam di luar layar. Diukur ulang hanya saat lebarnya berubah.
+let slotWidth = 0;
+
+function measureSlots(results) {
+  const width = results.clientWidth;
+  if (!width || width === slotWidth) return;
+  slotWidth = width;
+
+  const probe = document.createElement("div");
+  probe.className = "rows lookup-results lookup-probe";
+  probe.style.width = `${width}px`;
+  probe.innerHTML = [
+    ...Object.keys(DATA.materials).map(categoryRow),
+    ...DATA.wasteGuide.map(guideRow),
+    notFoundRow("nama barang yang panjang")
+  ].join("");
+  results.parentNode.appendChild(probe);
+
+  const tallest = Math.max(...[...probe.children].map((row) => Math.ceil(row.getBoundingClientRect().height)));
+  probe.remove();
+  results.style.setProperty("--slot-h", `${tallest}px`);
+}
+
+function renderLookup() {
+  const query = normalizeText(lookupInput.value);
+  const meta = document.getElementById("lookupMeta");
+  const results = document.getElementById("lookupResults");
+  measureSlots(results);
+
+  // Tanpa kata kunci: panduan empat kategori yang diterima
+  if (!query) {
+    meta.textContent = "Kategori yang diterima RecycleChain:";
+    results.innerHTML = fillSlots(Object.keys(DATA.materials).map(categoryRow));
+    return;
+  }
+
+  const found = searchGuide(query);
+
+  if (!found.length) {
+    meta.textContent = "0 hasil";
+    results.innerHTML = fillSlots([notFoundRow(lookupInput.value.trim())]);
+    return;
+  }
+
+  meta.textContent = found.length > LOOKUP_SLOTS
+    ? `${found.length} hasil, ${LOOKUP_SLOTS} teratas ditampilkan`
+    : `${found.length} hasil`;
+
+  results.innerHTML = fillSlots(found.slice(0, LOOKUP_SLOTS).map(guideRow));
+}
+
+// Lebar berubah (putar HP, ubah ukuran jendela): ukur ulang tinggi slot
+let lookupResizeTimer;
+window.addEventListener("resize", function() {
+  clearTimeout(lookupResizeTimer);
+  lookupResizeTimer = setTimeout(renderLookup, 150);
+});
+
+lookupInput.addEventListener("input", renderLookup);
+
+// "Setor ini": pilih jenis sampah di form, lalu lanjut ke isian berat
+document.addEventListener("click", function(event) {
+  const button = event.target.closest("[data-use-material]");
+  if (!button) return;
+
+  const radio = depositForm.querySelector(`input[name="material"][value="${button.dataset.useMaterial}"]`);
+  radio.checked = true;
+  renderDepositPreview(summarize());
+
+  weightInput.scrollIntoView({ behavior: "smooth", block: "center" });
+  weightInput.focus({ preventScroll: true });
+  weightInput.select();
+  showToast(`${material(button.dataset.useMaterial).name} dipilih. Isi perkiraan beratnya.`);
+});
+
+renderLookup();
 
 // =====================================
 // FITUR 7: TEMA

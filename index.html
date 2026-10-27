@@ -206,6 +206,22 @@
 
           <div class="settings-row">
             <div class="settings-label">
+              <h2>Cek jenis sampah</h2>
+              <p>Ketik nama barangnya untuk tahu kategorinya, cara memilahnya, dan berapa poinnya per kg.</p>
+            </div>
+            <div class="card lookup">
+              <div class="field">
+                <label for="lookupInput">Nama barang</label>
+                <input class="input" type="search" id="lookupInput" autocomplete="off"
+                  placeholder="Misalnya botol kecap, kardus, baterai">
+              </div>
+              <p class="meta" id="lookupMeta" aria-live="polite"></p>
+              <div class="rows lookup-results" id="lookupResults"></div>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-label">
               <h2>Setoran baru</h2>
               <p>Pilih jenis sampah dan perkirakan beratnya. Tarif di sini adalah contoh untuk prototype.</p>
               <h3>Cara kerjanya</h3>
@@ -315,6 +331,8 @@
                   <h2>Asal saldo</h2>
                 </header>
                 <dl class="well num" id="ledgerSummary"></dl>
+                <p class="fine">Setoran, penukaran, dan langganan tersimpan di browser ini untuk akunmu.</p>
+                <button type="button" class="btn wide-btn reset-btn" id="resetData">Kembalikan data contoh</button>
               </article>
 
               <article class="card">

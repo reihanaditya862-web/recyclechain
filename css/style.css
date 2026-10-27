@@ -1174,6 +1174,51 @@ svg use { pointer-events: none; }
   }
 }
 
+/* ---------- cek jenis sampah ----------
+   Hasilnya punya tinggi tetap (empat baris), agar form di bawahnya tidak
+   naik turun saat pengguna mengetik */
+
+.lookup { display: grid; gap: 12px; }
+.lookup-results { align-content: start; }
+
+/* Tinggi tetap per slot (--slot-h diukur oleh script.js dari baris terpanjang);
+   slot kosong tetap memegang tempatnya */
+.lookup-item {
+  grid-template-columns: minmax(0, 1fr) auto;
+  height: var(--slot-h, 92px);
+}
+
+.lookup-probe {
+  position: absolute;
+  left: -9999px;
+  visibility: hidden;
+}
+
+.lookup-probe .lookup-item { height: auto; }
+
+.lookup-item.placeholder { visibility: hidden; }
+/* Selalu satu baris, agar jumlah hasil tidak mendorong daftar ke bawah */
+#lookupMeta { height: 20px; overflow: hidden; line-height: 20px; text-overflow: ellipsis; white-space: nowrap; }
+.lookup-item .tag { margin-bottom: 0; }
+
+.lookup-item .row-main > span { white-space: normal; }
+
+.lookup-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--control-height);
+}
+
+.lookup-action .meta { white-space: nowrap; }
+.lookup .empty { margin-top: 4px; }
+.reset-btn { margin-top: 12px; }
+
+@media (max-width: 640px) {
+  .lookup-item { grid-template-columns: minmax(0, 1fr); row-gap: 8px; align-content: center; }
+  .lookup-action { justify-content: space-between; }
+}
+
 /* =========================================
    TEMA
    Dipilih di sidebar (dan di layar masuk), disimpan di browser.
