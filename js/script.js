@@ -446,7 +446,8 @@ function renderBeranda(totals) {
               <span>perkiraan +${formatPoints(depositPoints(item))} poin</span>
             </span>
           </div>`).join("")}
-      </div>`;
+      </div>
+      <button type="button" class="btn weigh-btn" data-simulate-weigh>Simulasikan penimbangan</button>`;
   } else {
     weigh.innerHTML = `
       <p class="weigh-date">${formatDay(DATA.weighing.date)}</p>
@@ -825,6 +826,7 @@ function renderAll() {
   renderTukar(totals);
   renderRiwayat(totals);
   renderPaket();
+  renderFun(totals);
   updateTitle();
 }
 
@@ -1007,8 +1009,9 @@ document.addEventListener("click", async function(event) {
   saveData();
   showToast(`Poin ditukar: ${item.name}. Sisa saldo ${formatPoints(summarize().balance)} poin.`);
 
-  await celebrate(button, { shot: 750, hold: 900 });
+  await celebrate(button, { shot: 750, hold: 900, onDone: () => confettiFrom(button) });
   renderAll();
+  checkMilestones();
 });
 
 // =====================================
@@ -1037,7 +1040,8 @@ const GIFT_ICON = `
 
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function celebrate(button, { shot, hold }) {
+async function celebrate(button, { shot, hold, onDone }) {
+  feedback("tap");
   button.classList.remove("is-playing", "is-done");
   void button.offsetWidth; // reflow: animasi selalu mulai dari awal
   button.classList.add("is-playing");
@@ -1045,6 +1049,7 @@ async function celebrate(button, { shot, hold }) {
 
   button.classList.remove("is-playing");
   button.classList.add("is-done");
+  if (onDone) onDone();
   await pause(hold);
   button.classList.remove("is-done");
 }
@@ -1118,6 +1123,7 @@ document.addEventListener("click", async function(event) {
   saveAndRender();
 
   showToast(`Paket ${plan.name} aktif. Reward refurbish sekarang diskon ${plan.refurbishDiscount}%.`);
+  confetti();
 });
 
 // Pilihan periode di layar Paket
@@ -1206,6 +1212,7 @@ function showView(name, moveFocus) {
   // Panduan sampah diukur saat layarnya terlihat, karena layar tersembunyi tidak punya lebar
   if (name === "setor") renderLookup();
   if (name === "profil") fillProfileForm();
+  if (name === "riwayat") renderWeeklyChart(Boolean(moveFocus));
 
   topbarTitle.textContent = VIEWS[name];
   closeSidebar();
@@ -1248,6 +1255,7 @@ function goTo(name) {
 // Riak menyebar dari titik klik (atau dari tengah kalau ditekan lewat keyboard),
 // tombol mengecil sebentar, dan ikonnya bergerak sesuai artinya (lihat .tile.is-tapped)
 function playTile(tile, event) {
+  feedback("tap");
   const rect = tile.getBoundingClientRect();
   const size = Math.max(rect.width, rect.height) * 2;
   const fromPointer = event.detail > 0;
@@ -1502,7 +1510,10 @@ function loadData() {
   state.redemptions = data.redemptions;
   state.plan = data.plan;
   state.subscription = data.plan === "basic" ? null : data.subscription;
+  // Pencapaian yang sudah pernah dirayakan; data lama atau baru dimulai dari keadaan sekarang
+  state.seen = data.seen && Array.isArray(data.seen.badges) ? data.seen : null;
   sequence = Math.max(0, ...state.deposits.map((item) => item.seq || 0), ...state.redemptions.map((item) => item.seq || 0));
+  if (!state.seen) state.seen = currentMilestones();
 }
 
 function saveData() {
@@ -1511,7 +1522,8 @@ function saveData() {
       deposits: state.deposits,
       redemptions: state.redemptions,
       plan: state.plan,
-      subscription: state.subscription
+      subscription: state.subscription,
+      seen: state.seen
     }));
   } catch {
     // Browser menolak penyimpanan: perubahan tetap berlaku sampai halaman ditutup
@@ -1521,6 +1533,7 @@ function saveData() {
 function saveAndRender() {
   saveData();
   renderAll();
+  checkMilestones();
 }
 
 document.getElementById("resetData").addEventListener("click", async function() {
@@ -1539,6 +1552,7 @@ document.getElementById("resetData").addEventListener("click", async function() 
 
   Object.assign(state, sampleData());
   sequence = state.deposits.length + state.redemptions.length;
+  state.seen = currentMilestones();
   saveAndRender();
   showToast("Data contoh dikembalikan.");
 });

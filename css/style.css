@@ -1872,3 +1872,272 @@ select.input {
 @media (prefers-reduced-motion: reduce) {
   .contact-btn:hover .ig-icon { transform: none; }
 }
+
+/* =========================================
+   KESERUAN: level, lencana, angka menu, saklar suara, confetti, grafik
+========================================= */
+
+/* ---------- level ---------- */
+
+.level-row {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+}
+
+.level-medal {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--primary-ink);
+  font-size: var(--fs-section);
+  font-weight: 600;
+}
+
+:root[data-rc-theme="dark"] .level-medal,
+:root[data-rc-theme="glass-dark"] .level-medal { color: #0d2a1b; }
+
+.level-text { display: grid; min-width: 0; }
+.level-text strong { font-weight: 600; }
+.level-text span { color: var(--muted); font-size: var(--fs-small); line-height: 20px; }
+.level-kg { color: var(--muted); font-size: var(--fs-small); white-space: nowrap; }
+
+.level-track {
+  height: 8px;
+  margin-top: 14px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--track);
+}
+
+.level-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 800ms var(--ease-out);
+}
+
+/* ---------- lencana ---------- */
+
+.badges {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 18px;
+  padding: 0;
+  list-style: none;
+}
+
+.badge {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 4px;
+  border: 0;
+  border-radius: var(--radius-inner);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background-color var(--t-hover) ease;
+}
+
+.badge:hover { background: var(--raised); }
+
+.badge-medal {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--control);
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+.badge-medal svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.badge-name {
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+}
+
+.badge.is-earned { color: var(--text); }
+
+.badge.is-earned .badge-medal {
+  border: 0;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  opacity: 1;
+}
+
+/* Lencana baru: muncul memantul dengan cincin yang melebar */
+.badge.is-new .badge-medal { animation: badge-pop 700ms var(--icon-ease-bounce); }
+.badge.is-poked .badge-medal { animation: badge-poke 420ms var(--icon-ease-bounce); }
+.level-medal.is-new { animation: badge-pop 700ms var(--icon-ease-bounce); }
+
+@keyframes badge-pop {
+  0% { transform: scale(0.4) rotate(-20deg); opacity: 0; }
+  60% { transform: scale(1.18) rotate(6deg); opacity: 1; }
+  100% { transform: none; }
+}
+
+@keyframes badge-poke {
+  40% { transform: scale(1.14) rotate(-8deg); }
+  100% { transform: none; }
+}
+
+/* ---------- angka di menu Tukar poin ---------- */
+
+.nav-label { flex: 1; }
+
+.nav-count {
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--primary-ink);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+:root[data-rc-theme="dark"] .nav-count,
+:root[data-rc-theme="glass-dark"] .nav-count { color: #0d2a1b; }
+
+.nav-count.is-bumped { animation: badge-poke 500ms var(--icon-ease-bounce); }
+
+/* ---------- saklar suara dan getar ---------- */
+
+.sound-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: var(--fs-small);
+  cursor: pointer;
+}
+
+.switch {
+  position: relative;
+  width: 36px;
+  height: 22px;
+  flex: none;
+  margin: 0;
+  border-radius: 999px;
+  background: var(--control);
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: background-color var(--t-ui) ease;
+}
+
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform var(--t-ui) var(--icon-ease-bounce);
+}
+
+.switch:checked { background: var(--accent); }
+.switch:checked::after { transform: translateX(14px); }
+
+/* ---------- confetti ---------- */
+
+.confetti-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ---------- grafik per minggu ---------- */
+
+.chart-legend {
+  display: flex;
+  gap: 14px;
+  color: var(--muted);
+  font-size: var(--fs-small);
+}
+
+.chart-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.chart-legend .dot { width: 8px; height: 8px; border-radius: 50%; }
+.chart-legend .dot.done { background: var(--accent); }
+.chart-legend .dot.pending { background: var(--accent-mid); }
+
+.weekly-chart { min-height: 200px; }
+.weekly-chart svg { display: block; overflow: visible; }
+.chart-grid { stroke: var(--rule); stroke-width: 1; }
+.chart-grid.base { stroke: var(--control); }
+.chart-tick { fill: var(--muted); font: 12px var(--font); font-variant-numeric: tabular-nums; }
+.bar-done { fill: var(--accent); }
+.bar-pending { fill: var(--accent-mid); }
+
+/* Batang tumbuh dari bawah saat layar Riwayat dibuka */
+.chart-bar.grow {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: bar-grow 600ms var(--ease-out) both;
+}
+
+@keyframes bar-grow {
+  from { transform: scaleY(0); }
+}
+
+/* ---------- tombol simulasi penimbangan ---------- */
+
+.weigh-btn { width: 100%; margin-top: 16px; }
+.weigh-side-btn { margin-top: 16px; }
+
+/* ---------- easter egg: logo berputar ---------- */
+
+.brand-mark.is-spinning { animation: logo-spin 900ms var(--icon-ease-bounce); }
+
+@keyframes logo-spin {
+  60% { transform: rotate(380deg) scale(1.25); }
+  100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 640px) {
+  .level-row { grid-template-columns: 44px minmax(0, 1fr); }
+  .level-kg { grid-column: 2; }
+  .level-medal { width: 44px; height: 44px; }
+  .badges { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+  .badge-medal { width: 40px; height: 40px; }
+  .badge-name { font-size: 11px; line-height: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge.is-new .badge-medal,
+  .badge.is-poked .badge-medal,
+  .level-medal.is-new,
+  .nav-count.is-bumped,
+  .brand-mark.is-spinning,
+  .chart-bar.grow { animation: none; }
+}
