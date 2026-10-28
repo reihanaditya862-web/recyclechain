@@ -446,6 +446,73 @@ svg use { pointer-events: none; }
 .tile:hover { background: var(--accent-soft-hover); }
 .tile:active { transform: scale(0.98); }
 
+/* ---------- animasi klik tombol pintasan ---------- */
+
+.tile {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Riak dari titik klik */
+.tile-ripple {
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.22;
+  pointer-events: none;
+  transform: scale(0);
+  animation: tile-ripple 550ms var(--icon-ease-out) forwards;
+}
+
+@keyframes tile-ripple {
+  to { transform: scale(1); opacity: 0; }
+}
+
+/* Tombol mengecil lalu memantul kembali */
+.tile.is-tapped { animation: tile-press 340ms var(--icon-ease-bounce); }
+
+@keyframes tile-press {
+  35% { transform: scale(0.93); }
+  100% { transform: none; }
+}
+
+/* Ikon bergerak sesuai artinya */
+.tile.is-tapped svg { will-change: transform; }
+.tile[data-view="setor"].is-tapped svg { transform-origin: 50% 100%; animation: tile-bin 460ms ease; }
+.tile[data-view="tukar"].is-tapped svg { animation: tile-gift 480ms var(--icon-ease-out); }
+.tile[data-view="riwayat"].is-tapped svg { animation: tile-rewind 520ms var(--icon-ease-out); }
+.tile[data-view="paket"].is-tapped svg { transform-origin: 50% 100%; animation: tile-stack 460ms var(--icon-ease-out); }
+
+/* Setor sampah: tempat sampah bergoyang */
+@keyframes tile-bin {
+  20% { transform: rotate(-14deg); }
+  45% { transform: rotate(12deg); }
+  70% { transform: rotate(-6deg); }
+  100% { transform: none; }
+}
+
+/* Tukar poin: kado meloncat sambil berputar */
+@keyframes tile-gift {
+  35% { transform: translateY(-8px) rotate(-12deg) scale(1.12); }
+  65% { transform: translateY(1px) rotate(5deg) scale(0.96); }
+  100% { transform: none; }
+}
+
+/* Riwayat: jam berputar mundur satu putaran */
+@keyframes tile-rewind {
+  from { transform: rotate(0); }
+  to { transform: rotate(-360deg); }
+}
+
+/* Paket: tumpukan lapisan memantul */
+@keyframes tile-stack {
+  30% { transform: scale(1.18, 0.82); }
+  60% { transform: translateY(-6px) scale(0.94, 1.1); }
+  100% { transform: none; }
+}
+
 /* ---------- rows ---------- */
 
 .rows { display: grid; }

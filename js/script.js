@@ -1226,12 +1226,48 @@ document.addEventListener("click", function(event) {
   event.preventDefault();
   const name = link.dataset.view;
 
+  // Tombol pintasan Beranda: animasi singkat dulu, baru pindah layar
+  if (link.classList.contains("tile") && !reducedMotion.matches) {
+    if (link.classList.contains("is-tapped")) return;
+    playTile(link, event);
+    setTimeout(() => goTo(name), 260);
+    return;
+  }
+
+  goTo(name);
+});
+
+function goTo(name) {
   if (location.hash.slice(1) === name) {
     showView(name, true);
   } else {
     location.hash = name;
   }
-});
+}
+
+// Riak menyebar dari titik klik (atau dari tengah kalau ditekan lewat keyboard),
+// tombol mengecil sebentar, dan ikonnya bergerak sesuai artinya (lihat .tile.is-tapped)
+function playTile(tile, event) {
+  const rect = tile.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height) * 2;
+  const fromPointer = event.detail > 0;
+  const x = fromPointer ? event.clientX - rect.left : rect.width / 2;
+  const y = fromPointer ? event.clientY - rect.top : rect.height / 2;
+
+  const ripple = document.createElement("span");
+  ripple.className = "tile-ripple";
+  ripple.style.width = `${size}px`;
+  ripple.style.height = `${size}px`;
+  ripple.style.left = `${x - size / 2}px`;
+  ripple.style.top = `${y - size / 2}px`;
+  tile.appendChild(ripple);
+
+  tile.classList.add("is-tapped");
+  setTimeout(() => {
+    ripple.remove();
+    tile.classList.remove("is-tapped");
+  }, 600);
+}
 
 window.addEventListener("hashchange", function() {
   showView(location.hash.slice(1), true);
