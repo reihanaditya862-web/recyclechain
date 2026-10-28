@@ -52,8 +52,8 @@
   --gap: 24px; --pad: 40px; --card-pad: 24px;
   --nav-row: 32px; --control-height: 40px; --row-height: 72px;
 
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --t-press: 120ms; --t-hover: 150ms; --t-ui: 220ms;
+  --ease-out: cubic-bezier(0.25, 0.8, 0.3, 1);
+  --t-press: 180ms; --t-hover: 220ms; --t-ui: 340ms;
 }
 
 /* ---------- reset ---------- */
@@ -350,7 +350,7 @@ svg use { pointer-events: none; }
   width: 100%;
   background: var(--accent);
   transform-origin: left center;
-  transition: transform 700ms var(--ease-out);
+  transition: transform 1000ms var(--ease-out);
 }
 .ladder-pending { background: var(--accent-mid); }
 
@@ -463,7 +463,7 @@ svg use { pointer-events: none; }
   opacity: 0.22;
   pointer-events: none;
   transform: scale(0);
-  animation: tile-ripple 550ms var(--icon-ease-out) forwards;
+  animation: tile-ripple 800ms var(--icon-ease-out) forwards;
 }
 
 @keyframes tile-ripple {
@@ -471,7 +471,7 @@ svg use { pointer-events: none; }
 }
 
 /* Tombol mengecil lalu memantul kembali */
-.tile.is-tapped { animation: tile-press 340ms var(--icon-ease-bounce); }
+.tile.is-tapped { animation: tile-press 520ms var(--icon-ease-bounce); }
 
 @keyframes tile-press {
   35% { transform: scale(0.93); }
@@ -480,10 +480,10 @@ svg use { pointer-events: none; }
 
 /* Ikon bergerak sesuai artinya */
 .tile.is-tapped svg { will-change: transform; }
-.tile[data-view="setor"].is-tapped svg { transform-origin: 50% 100%; animation: tile-bin 460ms ease; }
-.tile[data-view="tukar"].is-tapped svg { animation: tile-gift 480ms var(--icon-ease-out); }
-.tile[data-view="riwayat"].is-tapped svg { animation: tile-rewind 520ms var(--icon-ease-out); }
-.tile[data-view="paket"].is-tapped svg { transform-origin: 50% 100%; animation: tile-stack 460ms var(--icon-ease-out); }
+.tile[data-view="setor"].is-tapped svg { transform-origin: 50% 100%; animation: tile-bin 700ms ease-in-out; }
+.tile[data-view="tukar"].is-tapped svg { animation: tile-gift 720ms var(--icon-ease-out); }
+.tile[data-view="riwayat"].is-tapped svg { animation: tile-rewind 800ms var(--icon-ease-out); }
+.tile[data-view="paket"].is-tapped svg { transform-origin: 50% 100%; animation: tile-stack 700ms var(--icon-ease-out); }
 
 /* Setor sampah: tempat sampah bergoyang */
 @keyframes tile-bin {
@@ -1243,12 +1243,12 @@ select.input {
    Token gerak bersama, dipasang sekali */
 
 :root {
-  --icon-dur-press: 120ms;
-  --icon-dur-swap: 200ms;
-  --icon-dur-draw: 350ms;
-  --icon-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --icon-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
-  --icon-ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --icon-dur-press: 180ms;
+  --icon-dur-swap: 300ms;
+  --icon-dur-draw: 500ms;
+  --icon-ease-out: cubic-bezier(0.25, 0.8, 0.3, 1);
+  --icon-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --icon-ease-bounce: cubic-bezier(0.34, 1.3, 0.64, 1);  /* pantulan dikurangi: hidup tapi tidak melenting */
   --icon-press-scale: 0.94;
   --icon-swap-scale: 0.7;
   --icon-swap-blur: 2px;
@@ -1327,7 +1327,7 @@ select.input {
 
 .ic-btn.is-done .ic-check-mark {
   stroke-dashoffset: 0;
-  transition: stroke-dashoffset var(--icon-dur-draw) var(--icon-ease-out) 120ms;
+  transition: stroke-dashoffset var(--icon-dur-draw) var(--icon-ease-out) 160ms;
 }
 
 .ic-btn.is-done .label-idle { opacity: 0; transform: translateY(-6px); }
@@ -1342,9 +1342,9 @@ select.input {
 }
 
 /* Setor: tutup terbuka, botol jatuh masuk, tutup menutup memantul, tempat sampah bergoyang */
-.ic-deposit.is-playing .ic-bin-lid { animation: ic-bin-lid 900ms var(--icon-ease-out); }
-.ic-deposit.is-playing .ic-bin-item { animation: ic-bin-drop 900ms var(--icon-ease-in-out); }
-.ic-deposit.is-playing .ic-bin { animation: ic-bin-wiggle 900ms ease; }
+.ic-deposit.is-playing .ic-bin-lid { animation: ic-bin-lid 1300ms var(--icon-ease-out); }
+.ic-deposit.is-playing .ic-bin-item { animation: ic-bin-drop 1300ms var(--icon-ease-in-out); }
+.ic-deposit.is-playing .ic-bin { animation: ic-bin-wiggle 1300ms ease-in-out; }
 
 @keyframes ic-bin-lid {
   0% { transform: none; }
@@ -1370,9 +1370,9 @@ select.input {
 }
 
 /* Tukar: kotak kado memantul, tutupnya meloncat, kilau menyebar */
-.ic-redeem.is-playing .ic-gift-box { animation: ic-gift-squash 750ms var(--icon-ease-out); }
-.ic-redeem.is-playing .ic-gift-lid { animation: ic-gift-lid 750ms var(--icon-ease-bounce); }
-.ic-redeem.is-playing .ic-sparks { animation: ic-gift-sparks 750ms var(--icon-ease-out); }
+.ic-redeem.is-playing .ic-gift-box { animation: ic-gift-squash 1100ms var(--icon-ease-out); }
+.ic-redeem.is-playing .ic-gift-lid { animation: ic-gift-lid 1100ms var(--icon-ease-bounce); }
+.ic-redeem.is-playing .ic-sparks { animation: ic-gift-sparks 1100ms var(--icon-ease-out); }
 
 @keyframes ic-gift-squash {
   0% { transform: none; }
@@ -1418,8 +1418,8 @@ select.input {
 
 /* will-change hanya selama animasi berjalan, agar GPU tidak menahan lapisan terus-menerus */
 .entering-item {
-  animation: screen-in 380ms var(--ease-out) both;
-  animation-delay: calc(var(--i, 0) * 60ms);
+  animation: screen-in 560ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 85ms);
   will-change: transform, opacity;
 }
 
@@ -1435,13 +1435,13 @@ select.input {
   from { opacity: 0; }
 }
 
-.confirm-dialog[open] { animation: dialog-in 240ms var(--ease-out); }
-.confirm-dialog[open]::backdrop { animation: fade-in 240ms ease; }
+.confirm-dialog[open] { animation: dialog-in 380ms var(--ease-out); }
+.confirm-dialog[open]::backdrop { animation: fade-in 380ms ease; }
 
 /* Ganti tema: tampilan lama memudar ke tampilan baru (View Transitions) */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 320ms;
+  animation-duration: 480ms;
   animation-timing-function: ease;
 }
 
@@ -1920,7 +1920,7 @@ select.input {
   background: var(--accent);
   transform-origin: left center;
   transform: scaleX(0);
-  transition: transform 800ms var(--ease-out);
+  transition: transform 1100ms var(--ease-out);
 }
 
 /* ---------- lencana ---------- */
@@ -1987,9 +1987,9 @@ select.input {
 }
 
 /* Lencana baru: muncul memantul dengan cincin yang melebar */
-.badge.is-new .badge-medal { animation: badge-pop 700ms var(--icon-ease-bounce); }
-.badge.is-poked .badge-medal { animation: badge-poke 420ms var(--icon-ease-bounce); }
-.level-medal.is-new { animation: badge-pop 700ms var(--icon-ease-bounce); }
+.badge.is-new .badge-medal { animation: badge-pop 1000ms var(--icon-ease-bounce); }
+.badge.is-poked .badge-medal { animation: badge-poke 600ms var(--icon-ease-bounce); }
+.level-medal.is-new { animation: badge-pop 1000ms var(--icon-ease-bounce); }
 
 @keyframes badge-pop {
   0% { transform: scale(0.4) rotate(-20deg); opacity: 0; }
@@ -2030,7 +2030,7 @@ select.input {
 :root[data-rc-theme="dark"] .nav-count,
 :root[data-rc-theme="glass-dark"] .nav-count { color: #0d2a1b; }
 
-.nav-count.is-bumped { animation: badge-poke 500ms var(--icon-ease-bounce); }
+.nav-count.is-bumped { animation: badge-poke 700ms var(--icon-ease-bounce); }
 
 /* ---------- saklar suara dan getar ---------- */
 
@@ -2111,7 +2111,7 @@ select.input {
 .chart-bar.grow {
   transform-box: fill-box;
   transform-origin: 50% 100%;
-  animation: bar-grow 600ms var(--ease-out) both;
+  animation: bar-grow 900ms var(--ease-out) both;
 }
 
 @keyframes bar-grow {
@@ -2125,7 +2125,7 @@ select.input {
 
 /* ---------- easter egg: logo berputar ---------- */
 
-.brand-mark.is-spinning { animation: logo-spin 900ms var(--icon-ease-bounce); }
+.brand-mark.is-spinning { animation: logo-spin 1300ms var(--icon-ease-bounce); }
 
 @keyframes logo-spin {
   60% { transform: rotate(380deg) scale(1.25); }

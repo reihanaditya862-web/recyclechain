@@ -110,7 +110,7 @@ function animateNumber(el, to) {
     return;
   }
 
-  const duration = 700;
+  const duration = 1100;
   let start = null;
 
   const step = (now) => {
@@ -843,7 +843,7 @@ function showToast(message) {
   clearTimeout(showToast.timer);
   showToast.timer = setTimeout(() => {
     toast.classList.remove("show");
-  }, 3500);
+  }, 4200);
 }
 
 // confirm() bawaan browser tidak selalu muncul (misalnya saat website
@@ -962,7 +962,7 @@ depositForm.addEventListener("submit", async function(event) {
   renderDepositPreview(summarize());
 
   // Tutup terbuka, botol jatuh masuk, lalu centang
-  celebrate(document.getElementById("depositSubmit"), { shot: 900, hold: 1400 });
+  celebrate(document.getElementById("depositSubmit"), { shot: 1300, hold: 1700 });
 });
 
 // =====================================
@@ -1009,7 +1009,7 @@ document.addEventListener("click", async function(event) {
   saveData();
   showToast(`Poin ditukar: ${item.name}. Sisa saldo ${formatPoints(summarize().balance)} poin.`);
 
-  await celebrate(button, { shot: 750, hold: 900, onDone: () => confettiFrom(button) });
+  await celebrate(button, { shot: 1100, hold: 1200, onDone: () => confettiFrom(button) });
   renderAll();
   checkMilestones();
 });
@@ -1189,7 +1189,7 @@ function playScreenIn(name) {
   clearTimeout(screenInTimer);
   screenInTimer = setTimeout(() => {
     blocks.forEach((block) => block.classList.remove("entering-item"));
-  }, 380 + 8 * 60 + 100);
+  }, 560 + 8 * 85 + 150);
 }
 
 function showView(name, moveFocus) {
@@ -1237,7 +1237,7 @@ document.addEventListener("click", function(event) {
   if (link.classList.contains("tile") && !reducedMotion.matches) {
     if (link.classList.contains("is-tapped")) return;
     playTile(link, event);
-    setTimeout(() => goTo(name), 260);
+    setTimeout(() => goTo(name), 380);
     return;
   }
 
@@ -1274,7 +1274,7 @@ function playTile(tile, event) {
   setTimeout(() => {
     ripple.remove();
     tile.classList.remove("is-tapped");
-  }, 600);
+  }, 900);
 }
 
 window.addEventListener("hashchange", function() {
@@ -2140,7 +2140,7 @@ function switchTheme(theme) {
     // Pengaman: kalau browser menunda transisinya, tema tetap terpasang
     setTimeout(() => {
       if (currentTheme() !== theme) applyTheme(theme);
-    }, 400);
+    }, 600);
   } else {
     applyTheme(theme);
   }

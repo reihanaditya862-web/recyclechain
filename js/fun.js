@@ -111,7 +111,7 @@ function renderFun(totals) {
   const badge = document.getElementById("navRedeemCount");
   badge.hidden = count === 0;
   badge.querySelector(".num").textContent = count;
-  if (lastRedeemCount !== null && count > lastRedeemCount) replayClass(badge, "is-bumped", 500);
+  if (lastRedeemCount !== null && count > lastRedeemCount) replayClass(badge, "is-bumped", 700);
   lastRedeemCount = count;
 
   renderWeeklyChart(false);  // hanya tergambar kalau layar Riwayat sedang terlihat
@@ -130,7 +130,7 @@ document.getElementById("badgeList").addEventListener("click", function(event) {
   const badge = BADGES.find((item) => item.id === button.dataset.badge);
   const has = button.classList.contains("is-earned");
   showToast(`${badge.name}: ${badge.desc}${has ? "" : " Belum didapat."}`);
-  replayClass(button, "is-poked", 450);
+  replayClass(button, "is-poked", 650);
 });
 
 // =====================================
@@ -160,10 +160,10 @@ function checkMilestones() {
 
     newBadges.forEach((id) => {
       const button = document.querySelector(`[data-badge="${id}"]`);
-      if (button) replayClass(button, "is-new", 1200);
+      if (button) replayClass(button, "is-new", 1500);
     });
-    if (levelUp) replayClass(document.getElementById("levelNumber"), "is-new", 1200);
-  }, 1600);
+    if (levelUp) replayClass(document.getElementById("levelNumber"), "is-new", 1500);
+  }, 2200);
 }
 
 // =====================================
@@ -201,7 +201,7 @@ function confetti({ x = innerWidth / 2, y = innerHeight * 0.32, count = 130, spr
       spin: (Math.random() - 0.5) * 0.4,
       angle: Math.random() * Math.PI,
       life: 0,
-      ttl: 1.6 + Math.random() * 0.8
+      ttl: 2.4 + Math.random() * 1.0
     });
   }
 
@@ -212,7 +212,7 @@ function confetti({ x = innerWidth / 2, y = innerHeight * 0.32, count = 130, spr
 
   // Pengaman: kalau frame ditahan browser, kanvas tetap dibersihkan
   clearTimeout(confettiState.cleanup);
-  confettiState.cleanup = setTimeout(stopConfetti, 3500);
+  confettiState.cleanup = setTimeout(stopConfetti, 5500);
 }
 
 // Semburan kecil dari tengah sebuah tombol
@@ -242,15 +242,15 @@ function stepConfetti(now) {
 
   confettiState.particles.forEach((p) => {
     p.life += dt;
-    p.vy += 22 * dt;              // gravitasi
-    p.vx *= 0.985;                // hambatan udara
-    p.vy *= 0.985;
+    p.vy += 15 * dt;              // gravitasi lebih ringan: confetti melayang pelan
+    p.vx *= 0.988;                // hambatan udara
+    p.vy *= 0.988;
     p.x += p.vx * dt * 60;
     p.y += p.vy * dt * 60;
     p.angle += p.spin;
 
     context.save();
-    context.globalAlpha = Math.min(1, (p.ttl - p.life) / 0.4);
+    context.globalAlpha = Math.min(1, (p.ttl - p.life) / 0.7);
     context.translate(p.x, p.y);
     context.rotate(p.angle);
     context.fillStyle = p.color;
@@ -398,7 +398,7 @@ function renderWeeklyChart(animate) {
     const pendingTop = y(w.done + w.pending);
     const label = `${formatDate(w.start)} sampai ${formatDate(w.end)}: ${formatKg(roundKg(w.done))} ditimbang` +
       (w.pending ? `, ${formatKg(roundKg(w.pending))} menunggu` : "");
-    const delay = animate ? `style="animation-delay:${i * 45}ms"` : "";
+    const delay = animate ? `style="animation-delay:${i * 70}ms"` : "";
 
     svg += `<g class="chart-bar${animate ? " grow" : ""}" ${delay}><title>${escapeHtml(label)}</title>`;
     if (w.done) svg += `<rect class="bar-done" x="${x}" y="${doneTop}" width="${barW}" height="${y(0) - doneTop}" rx="3"/>`;
@@ -469,5 +469,5 @@ document.addEventListener("click", function(event) {
   showToast("Kamu menemukan rahasia RecycleChain. Terima kasih sudah ikut menjaga bumi!");
   confetti({ y: innerHeight * 0.2, count: 220, spread: 1.2 });
   const mark = event.target.closest(".brand").querySelector(".brand-mark");
-  if (mark) replayClass(mark, "is-spinning", 900);
+  if (mark) replayClass(mark, "is-spinning", 1300);
 });
