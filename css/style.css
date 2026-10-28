@@ -2006,9 +2006,13 @@ select.input {
 
 .nav-label { flex: 1; }
 
+/* Angka tepat di tengah lingkaran: tinggi baris sendiri (bukan 24px warisan menu),
+   dan text-box memotong ruang kosong font di atas/bawah angka */
 .nav-count {
-  display: grid;
-  place-items: center;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
   min-width: 20px;
   height: 20px;
   padding: 0 6px;
@@ -2017,7 +2021,11 @@ select.input {
   color: var(--primary-ink);
   font-size: 12px;
   font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
+
+.nav-count .num { text-box: trim-both cap alphabetic; }
 
 :root[data-rc-theme="dark"] .nav-count,
 :root[data-rc-theme="glass-dark"] .nav-count { color: #0d2a1b; }
