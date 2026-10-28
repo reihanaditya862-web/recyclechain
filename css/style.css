@@ -2304,3 +2304,201 @@ select.input {
 
 /* Avatar tetap terlihat di atas panel kaca terang */
 :root[data-rc-theme="glass-light"] .avatar { background: rgba(255, 255, 255, 0.85); }
+
+/* =========================================
+   LOKASI DROP-OFF: peta Leaflet + daftar tempat terdekat
+========================================= */
+
+.map-card { display: grid; gap: 14px; align-content: start; }
+
+.map-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.map-search {
+  display: flex;
+  flex: 1;
+  gap: 8px;
+  min-width: 220px;
+}
+
+.map-search .input { flex: 1; min-width: 0; }
+
+.map {
+  height: 480px;
+  overflow: hidden;
+  border-radius: var(--radius-inner);
+  background: var(--raised);
+  isolation: isolate;
+}
+
+/* Kontrol Leaflet mengikuti tampilan aplikasi */
+.map .leaflet-control-zoom a {
+  background: var(--surface-strong, var(--surface));
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.map.leaflet-container .leaflet-control-attribution {
+  background: var(--surface-strong, var(--surface));
+  color: var(--muted);
+  font: 11px var(--font);
+}
+
+.map.leaflet-container .leaflet-control-attribution a { color: var(--text); }
+.map .leaflet-popup-content-wrapper,
+.map .leaflet-popup-tip { background: var(--surface-strong, var(--surface)); color: var(--text); }
+.map .leaflet-popup-content { margin: 10px 14px; font: 13px/1.45 var(--font); }
+
+/* Tema gelap: tile OpenStreetMap dibalik warnanya (dikerjakan GPU, pin tidak ikut) */
+.map.is-dark .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.88) saturate(0.6);
+}
+
+/* Pin tempat: lingkaran berwarna sesuai jenis, bergaris putih */
+.map-pin span {
+  display: block;
+  width: 26px;
+  height: 26px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  transition: transform var(--t-ui) var(--icon-ease-bounce);
+}
+
+.map-pin:hover span { transform: scale(1.18); }
+.pin-centre span { background: #14a3a0; }  /* toska: beda dari titik biru "Lokasimu" */
+.pin-container span { background: #e0a800; }
+.pin-transfer span { background: #7b8794; }
+.pin-point span { background: #4cc38a; }
+
+/* Lokasi pengguna: titik biru yang berdenyut pelan */
+.map-me span {
+  position: relative;
+  display: block;
+  width: 22px;
+  height: 22px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: #2b7fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.map-me.is-search span { background: var(--text); }
+
+.map-me span::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: #2b7fff;
+  opacity: 0.35;
+  animation: me-pulse 2.4s ease-out infinite;
+  z-index: -1;
+}
+
+.map-me.is-search span::after { display: none; }
+
+@keyframes me-pulse {
+  from { transform: scale(1); opacity: 0.35; }
+  to { transform: scale(2.6); opacity: 0; }
+}
+
+/* Daftar tempat terdekat: digulir di dalam kartunya sendiri */
+.places-card { display: grid; align-content: start; }
+
+.map-status {
+  padding: 12px 14px;
+  border-radius: var(--radius-inner);
+  background: var(--raised);
+  color: var(--muted);
+  font-size: var(--fs-small);
+  line-height: 20px;
+}
+
+.map-status[data-tone="error"] { background: var(--pill-warning-bg); color: var(--pill-warning-ink); }
+
+.places {
+  display: grid;
+  max-height: 520px;
+  margin: 0 -8px;
+  padding: 0 8px;
+  overflow-y: auto;
+  list-style: none;
+  overscroll-behavior: contain;
+}
+
+.place {
+  display: grid;
+  gap: 10px;
+  padding: 14px 0;
+  border-top: 1px solid var(--rule);
+}
+
+.place:first-child { border-top: 0; }
+
+.place-main {
+  display: grid;
+  gap: 4px;
+  padding: 6px 8px;
+  margin: -6px -8px;
+  border: 0;
+  border-radius: var(--radius-inner);
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--t-hover) ease;
+}
+
+.place-main:hover,
+.place.is-selected .place-main { background: var(--raised); }
+
+.place-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.place-head strong { font-weight: 600; }
+.place-distance { flex: none; color: var(--accent); font-size: var(--fs-small); font-weight: 600; }
+.place-kind,
+.place-meta,
+.place-unknown { color: var(--muted); font-size: var(--fs-small); line-height: 20px; }
+
+.place-accepts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.place-accepts .tag { height: 24px; margin: 0; padding: 0 10px; font-size: 12px; }
+
+.place-actions { display: flex; gap: 8px; }
+.place-actions .btn { height: 36px; }
+
+.places-empty {
+  padding: 14px 0;
+  color: var(--muted);
+  font-size: var(--fs-small);
+  line-height: 20px;
+}
+
+.places-empty a { color: var(--text); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+
+.map-link { justify-self: start; }
+
+@media (max-width: 900px) {
+  .map { height: 360px; }
+  .places { max-height: none; }
+}
+
+@media (max-width: 640px) {
+  .map { height: 300px; }
+  .map-search { min-width: 100%; }
+  .place-actions .btn { flex: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-me span::after { animation: none; }
+}

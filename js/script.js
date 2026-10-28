@@ -13,13 +13,15 @@ const VIEWS = {
   tukar: "Tukar poin",
   riwayat: "Riwayat",
   paket: "Paket membership",
-  profil: "Profil"
+  profil: "Profil",
+  lokasi: "Lokasi drop-off"
 };
 
 // Kalimat di bawah judul tiap layar; yang berisi angka diisi saat render
 const screenSubs = {
   setor: "Ajukan setoran, lalu serahkan sampahnya. Poin masuk setelah mitra menimbang.",
   profil: "Ubah foto, nama, nomor telepon, dan email akunmu.",
+  lokasi: "Bank sampah dan titik daur ulang di sekitarmu, dari data OpenStreetMap.",
   paket: "Kamu memakai Basic, gratis tanpa biaya langganan. Premium dan Super menambah reward barang refurbish."
 };
 
@@ -211,6 +213,10 @@ function handover(methodId) {
     return `Mitra menjemput ke rumah ${day}, ${DATA.weighing.pickupWindow}.`;
   }
   if (methodId === "dropbox") {
+    // Tempat yang dipilih di layar Lokasi lewat "Setor ke sini"
+    if (state.dropPlace) {
+      return `Antar ke ${state.dropPlace.name} (${state.dropPlace.distance} dari lokasimu). Ditimbang ${day}.`;
+    }
     return `Masukkan ke drop-box terdekat. Isinya ditimbang ${day}.`;
   }
   return `Serahkan di titik kumpul RT/RW. Ditimbang ${day}.`;
@@ -1213,6 +1219,7 @@ function showView(name, moveFocus) {
   if (name === "setor") renderLookup();
   if (name === "profil") fillProfileForm();
   if (name === "riwayat") renderWeeklyChart(Boolean(moveFocus));
+  if (name === "lokasi") openMap();
 
   topbarTitle.textContent = VIEWS[name];
   closeSidebar();
