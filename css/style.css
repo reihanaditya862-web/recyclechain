@@ -568,7 +568,7 @@ svg use { pointer-events: none; }
 
 .plan-text { color: var(--muted); font-size: var(--fs-small); line-height: 20px; }
 .btn.pinned { align-self: flex-start; margin-top: auto; }
-.card.grow .plan-text { margin-bottom: 20px; }
+.card.grow .plan-text { min-height: 80px; margin-bottom: 20px; }
 
 .t-plastik { background: var(--plastik-bg); color: var(--plastik-ink); }
 .t-kertas { background: var(--kertas-bg); color: var(--kertas-ink); }
@@ -2501,4 +2501,178 @@ select.input {
 
 @media (prefers-reduced-motion: reduce) {
   .map-me span::after { animation: none; }
+}
+
+/* =========================================
+   UPDATE BESAR: dampak, bagikan, panduan, CSV, aksesibilitas
+========================================= */
+
+/* ---------- kepala kartu dengan tombol ---------- */
+
+.card-head-side {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.share-btn,
+.csv-btn { height: 34px; padding: 0 14px; }
+
+/* ---------- Dampakmu ---------- */
+
+.impact-lead { color: var(--muted); font-size: var(--fs-small); line-height: 20px; }
+
+.impact-rows {
+  display: grid;
+  margin-top: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.impact-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 10px;
+  row-gap: 4px;
+  padding: 12px 0;
+}
+
+.impact-row + .impact-row { border-top: 1px solid var(--rule); }
+
+.impact-figure {
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.impact-item { font-weight: 500; }
+.impact-row .tag { grid-column: 1 / -1; justify-self: start; height: 24px; margin: 0; font-size: 12px; }
+.impact-empty { padding: 12px 0; color: var(--muted); font-size: var(--fs-small); line-height: 20px; }
+
+/* ---------- dialog bagikan ---------- */
+
+.share-dialog { width: min(480px, calc(100% - 32px)); }
+
+.share-preview {
+  overflow: hidden;
+  border-radius: var(--radius-inner);
+  background: var(--raised);
+  aspect-ratio: 1080 / 1350;
+  max-height: 56vh;
+  justify-self: center;
+}
+
+.share-preview canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------- panduan selamat datang ---------- */
+
+.welcome-dialog { width: min(460px, calc(100% - 32px)); }
+.welcome-progress { color: var(--muted); font-size: var(--fs-small); }
+.welcome-dialog h2 { font-family: var(--font-display); font-size: 26px; line-height: 32px; font-weight: 700; letter-spacing: -0.02em; }
+
+/* Slide ditumpuk di satu sel; yang aktif memudar masuk, yang lain bergeser keluar */
+.welcome-slides { display: grid; overflow: hidden; }
+
+.welcome-slide {
+  display: grid;
+  grid-area: 1 / 1;
+  justify-items: start;
+  gap: 10px;
+  padding: 6px 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(28px);
+  transition:
+    opacity 450ms var(--ease-out),
+    transform 450ms var(--ease-out),
+    visibility 0s linear 450ms;
+}
+
+.welcome-slide.is-before { transform: translateX(-28px); }
+
+.welcome-slide.is-active {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity 450ms var(--ease-out) 80ms,
+    transform 450ms var(--ease-out) 80ms;
+}
+
+.welcome-icon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.welcome-icon svg {
+  width: 30px;
+  height: 30px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.welcome-slide.is-active .welcome-icon { animation: badge-poke 700ms var(--icon-ease-bounce) 150ms both; }
+.welcome-slide h3 { font-size: var(--fs-section); line-height: 28px; font-weight: 600; }
+.welcome-slide p { color: var(--muted); line-height: 24px; }
+
+.welcome-dots { display: flex; gap: 8px; }
+
+.welcome-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--control);
+  transition: width var(--t-ui) var(--ease-out), background-color var(--t-ui) ease;
+}
+
+.welcome-dots span.is-active { width: 24px; background: var(--accent); }
+.welcome-skip { margin-right: auto; }
+
+/* ---------- Profil: "Lihat panduan" di kiri ---------- */
+
+.form-foot .welcome-again { margin-right: auto; }
+
+/* ---------- Lewati ke konten: terlihat hanya saat difokus dengan keyboard ---------- */
+
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 200;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--primary-ink);
+  font-weight: 600;
+  transform: translateY(-160%);
+  transition: transform var(--t-ui) var(--ease-out);
+}
+
+.skip-link:focus { transform: none; }
+
+@media (max-width: 640px) {
+  .card-head-side { gap: 8px; }
+  .card-head-side .meta { display: none; }
+  .form-foot { flex-wrap: wrap; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-slide,
+  .welcome-slide.is-active { transform: none; }
+  .welcome-slide.is-active .welcome-icon { animation: none; }
 }

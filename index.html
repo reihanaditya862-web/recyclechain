@@ -4,6 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>RecycleChain | Sampahmu Jadi Saldo</title>
+  <meta name="description" content="Setor sampah terpilah, kumpulkan poin, lalu tukar dengan pulsa, voucher, token listrik, atau donasi. Prototype bank sampah digital RecycleChain.">
+  <meta name="theme-color" content="#1f7a4a">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="RecycleChain">
+  <meta property="og:locale" content="id_ID">
+  <meta property="og:title" content="RecycleChain | Sampahmu Jadi Saldo">
+  <meta property="og:description" content="Setor sampah terpilah, kumpulkan poin, lalu tukar dengan pulsa, voucher, token listrik, atau donasi.">
+  <meta property="og:url" content="https://recyclechain.vercel.app/">
+  <meta property="og:image" content="https://recyclechain.vercel.app/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="RecycleChain: sampahmu jadi saldo, bukan cuma jadi bau">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
@@ -102,6 +117,7 @@
   </div>
 
   <div class="app" id="app" hidden>
+    <a class="skip-link" href="#screenTitle" id="skipLink">Lewati ke konten</a>
     <aside class="sidebar" id="sidebar" aria-label="Navigasi utama">
       <div class="sidebar-head">
         <a class="brand" href="#beranda" data-view="beranda">
@@ -195,7 +211,10 @@
               <article class="card level-card">
                 <header class="card-head">
                   <h2>Level kamu</h2>
-                  <span class="meta num" id="badgeMeta"></span>
+                  <span class="card-head-side">
+                    <span class="meta num" id="badgeMeta"></span>
+                    <button type="button" class="btn share-btn" id="shareOpen">Bagikan</button>
+                  </span>
                 </header>
                 <div class="level-row">
                   <span class="level-medal num" id="levelNumber" aria-label="Level">1</span>
@@ -232,6 +251,17 @@
                   <a class="card-link" href="#riwayat" data-view="riwayat" id="activityAll">Lihat semua</a>
                 </header>
                 <div class="rows" id="recentRows"></div>
+              </article>
+
+              <article class="card impact-card">
+                <header class="card-head">
+                  <h2>Dampakmu</h2>
+                  <span class="meta num" id="impactMeta"></span>
+                </header>
+                <p class="impact-lead">Sampah yang sudah kamu pilah setara dengan:</p>
+                <ul class="impact-rows" id="impactRows"></ul>
+                <p class="fine">Perkiraan dari berat rata-rata: botol 600 ml 20 g, kertas A4 5 g,
+                  kaleng minuman 15 g, HP 200 g.</p>
               </article>
 
               <article class="card grow">
@@ -417,6 +447,10 @@
             </article>
 
             <article class="card">
+              <header class="card-head">
+                <h2>Semua transaksi</h2>
+                <button type="button" class="btn csv-btn" id="csvDownload">Unduh CSV</button>
+              </header>
               <div class="tabs" role="tablist" aria-label="Jenis transaksi" id="ledgerTabs">
                 <button type="button" role="tab" data-filter="all" aria-selected="true">Semua <span class="num"></span></button>
                 <button type="button" role="tab" data-filter="deposit" aria-selected="false">Setoran <span class="num"></span></button>
@@ -503,6 +537,7 @@
               </div>
 
               <div class="form-foot">
+                <button type="button" class="btn welcome-again" id="welcomeAgain">Lihat panduan</button>
                 <button type="button" class="btn" id="profileReset">Batalkan</button>
                 <button type="submit" class="btn primary">Simpan perubahan</button>
               </div>
@@ -587,11 +622,42 @@
     </div>
   </dialog>
 
+  <!-- Bagikan pencapaian sebagai gambar -->
+  <dialog class="confirm-dialog share-dialog" id="shareDialog" aria-labelledby="shareTitle">
+    <div class="confirm-body">
+      <h2 id="shareTitle">Bagikan pencapaian</h2>
+      <p class="confirm-note">Gambar ini dibuat dari data akunmu. Bagikan ke Instagram atau WhatsApp, atau simpan dulu.</p>
+      <div class="share-preview"><canvas id="shareCanvas" width="1080" height="1350"
+        role="img" aria-label="Gambar pencapaian RecycleChain"></canvas></div>
+      <div class="confirm-actions">
+        <button type="button" class="btn" id="shareClose">Tutup</button>
+        <button type="button" class="btn" id="shareDownload">Unduh gambar</button>
+        <button type="button" class="btn primary" id="shareNative" hidden>Bagikan</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Panduan selamat datang: empat langkah -->
+  <dialog class="confirm-dialog welcome-dialog" id="welcomeDialog" aria-labelledby="welcomeTitle">
+    <div class="confirm-body">
+      <p class="welcome-progress num" id="welcomeProgress"></p>
+      <h2 id="welcomeTitle">Cara kerja RecycleChain</h2>
+      <div class="welcome-slides" id="welcomeSlides" aria-live="polite"></div>
+      <div class="welcome-dots" id="welcomeDots" aria-hidden="true"></div>
+      <div class="confirm-actions">
+        <button type="button" class="btn welcome-skip" id="welcomeSkip">Lewati</button>
+        <button type="button" class="btn" id="welcomeBack" hidden>Kembali</button>
+        <button type="button" class="btn primary" id="welcomeNext">Lanjut</button>
+      </div>
+    </div>
+  </dialog>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="js/data.js"></script>
   <script src="js/fun.js"></script>
   <script src="js/map.js"></script>
+  <script src="js/extras.js"></script>
   <script src="js/script.js"></script>
 </body>
 </html>

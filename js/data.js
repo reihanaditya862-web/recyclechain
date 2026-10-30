@@ -61,6 +61,16 @@ const DATA = {
     { name: "Obat kedaluwarsa", words: "obat kadaluarsa kedaluwarsa", material: null, tip: "Belum diterima. Serahkan ke apotek yang menerima obat bekas." }
   ],
 
+  // Kartu "Dampakmu": berat sampah dibandingkan dengan benda sehari-hari.
+  // Berat rata-rata per benda (perkiraan): botol PET 600 ml sekitar 20 g, kertas A4 80 gsm
+  // 0,0625 m2 x 80 g/m2 = 5 g, kaleng minuman aluminium sekitar 15 g, HP sekitar 200 g.
+  impact: {
+    plastik: { item: "botol air mineral 600 ml", gramsEach: 20 },
+    kertas: { item: "lembar kertas A4", gramsEach: 5 },
+    logam: { item: "kaleng minuman", gramsEach: 15 },
+    elektronik: { item: "HP bekas", gramsEach: 200 }
+  },
+
   methods: {
     jemput: { name: "Jemput terjadwal" },
     dropbox: { name: "Drop-box terdekat" },

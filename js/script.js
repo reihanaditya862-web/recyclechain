@@ -684,6 +684,7 @@ function renderRiwayat(totals) {
   document.querySelectorAll("#ledgerTabs button").forEach((tab) => {
     const filter = tab.dataset.filter;
     tab.setAttribute("aria-selected", String(filter === state.ledgerFilter));
+    tab.tabIndex = filter === state.ledgerFilter ? 0 : -1;
     tab.querySelector("span").textContent = counts[filter];
   });
 
@@ -833,6 +834,7 @@ function renderAll() {
   renderRiwayat(totals);
   renderPaket();
   renderFun(totals);
+  renderImpact(totals);
   updateTitle();
 }
 
@@ -1443,6 +1445,7 @@ authForm.addEventListener("submit", function(event) {
       { name, email, initials: initialsOf(name), phone: "", photo: null },
       `Akun dibuat. Selamat datang, ${name.split(" ")[0]}! Akun baru memakai data contoh.`
     );
+    setTimeout(() => openWelcome(name), 700);
     return;
   }
 
